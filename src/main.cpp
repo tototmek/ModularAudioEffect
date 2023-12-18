@@ -15,13 +15,21 @@ int main() {
     blocks::Gain sink{1.0f};
     blocks::SingleProcessBlock sinkBlock{sink};
 
+    blocks::Splitter splitter{2};
+    blocks::Adder adder{2};
+
     gainBlock.getOutputPort().connect(delayBlock.getInputPort());
-    delayBlock.getOutputPort().connect(sinkBlock.getInputPort());
+    delayBlock.getOutputPort().connect(splitter.getInputPort());
+    splitter.getOutputPorts()[0].connect(adder.getInputPorts()[0]);
+    splitter.getOutputPorts()[1].connect(adder.getInputPorts()[1]);
+    adder.getOutputPort().connect(sinkBlock.getInputPort());
 
     const auto processData = [&](float sample) -> float {
         gainBlock.getInputPort().setSample(sample);
         gainBlock.evaluate();
         delayBlock.evaluate();
+        splitter.evaluate();
+        adder.evaluate();
         return sinkBlock.getInputPort().getSample();
     };
 

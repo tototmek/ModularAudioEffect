@@ -8,6 +8,8 @@ processes/gain.cpp
 processes/delay.cpp
 single_process_block.cpp
 composite_block.cpp
+adder.cpp
+splitter.cpp
 )
 
 add_library(${LIBRARY_NAME} STATIC ${MODULE_SRC})
