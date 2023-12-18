@@ -6,6 +6,7 @@
 
 namespace blocks {
 
+class Port;
 class InputPort;
 class OutputPort;
 
@@ -14,17 +15,28 @@ class Block {
     virtual void evaluate() = 0;
 };
 
-class InputPort {
+class Port {
   public:
-    float getSample() { return sample_; };
-    void setSample(float value) { sample_ = value; };
+    Port(Block& parent) : parent_(parent) {}
+    Block& getParent() { return parent_; }
+
+  private:
+    Block& parent_;
+};
+
+class InputPort : public Port {
+  public:
+    InputPort(Block& parent) : Port(parent) {}
+    float getSample() { return sample_; }
+    void setSample(float value) { sample_ = value; }
 
   private:
     float sample_ = 0.0f;
 };
 
-class OutputPort {
+class OutputPort : public Port {
   public:
+    OutputPort(Block& parent) : Port(parent) {}
     void connect(InputPort& destination) {
         destination_ = std::ref(destination);
     };

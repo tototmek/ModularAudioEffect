@@ -2,7 +2,8 @@
 
 namespace blocks {
 
-SingleProcessBlock::SingleProcessBlock(Process& process) : process_(process) {}
+SingleProcessBlock::SingleProcessBlock(Process& process)
+    : inputPort_(*this), outputPort_(*this), process_(process) {}
 
 void SingleProcessBlock::evaluate() {
     float sample = inputPort_.getSample();
