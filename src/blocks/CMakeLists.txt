@@ -1,9 +1,11 @@
 set(MODULE_NAME blocks)
 set(LIBRARY_NAME "${MODULE_NAME}")
 
+include_directories(processes/)
+
 set(MODULE_SRC 
-gain.cpp
-delay.cpp
+processes/gain.cpp
+processes/delay.cpp
 )
 
 add_library(${LIBRARY_NAME} STATIC ${MODULE_SRC})

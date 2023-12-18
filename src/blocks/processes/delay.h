@@ -1,12 +1,12 @@
 #ifndef BLOCKS_DELAY_H
 #define BLOCKS_DELAY_H
 
-#include "processing_block.h"
+#include "process.h"
 #include "shift_register.h"
 
 namespace blocks {
 
-class Delay : public ProcessingBlock {
+class Delay : public Process {
   public:
     Delay(float time);
     float process(float x) override;

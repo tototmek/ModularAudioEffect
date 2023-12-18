@@ -1,11 +1,11 @@
 #ifndef BLOCKS_GAIN_H
 #define BLOCKS_GAIN_H
 
-#include "processing_block.h"
+#include "process.h"
 
 namespace blocks {
 
-class Gain : public ProcessingBlock {
+class Gain : public Process {
   public:
     Gain(float gain);
     float process(float x) override;
