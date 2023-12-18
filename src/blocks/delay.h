@@ -12,6 +12,7 @@ class Delay : public ProcessingBlock {
     float process(float x) override;
 
   private:
+    size_t nSamples_;
     ShiftRegister<float> register_;
 };
 
