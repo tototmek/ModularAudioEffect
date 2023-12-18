@@ -3,6 +3,7 @@
 
 #include "adder.h"
 #include "composite_block.h"
+#include "evaluation_sequence.h"
 #include "processes/delay.h"
 #include "processes/gain.h"
 #include "single_process_block.h"

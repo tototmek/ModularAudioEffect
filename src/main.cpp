@@ -24,7 +24,11 @@ int main() {
     splitter.getOutputPorts()[1].connect(adder.getInputPorts()[1]);
     adder.getOutputPort().connect(sinkBlock.getInputPort());
 
+    blocks::EvaluationSequence evaluationSequence;
+    evaluationSequence.compute({gainBlock.getInputPort()});
+
     const auto processData = [&](float sample) -> float {
+        // evaluationSequence.evaluate();
         gainBlock.getInputPort().setSample(sample);
         gainBlock.evaluate();
         delayBlock.evaluate();
