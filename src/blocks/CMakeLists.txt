@@ -10,6 +10,7 @@ single_process_block.cpp
 adder.cpp
 splitter.cpp
 evaluation_sequence.cpp
+block.cpp
 )
 
 add_library(${LIBRARY_NAME} STATIC ${MODULE_SRC})

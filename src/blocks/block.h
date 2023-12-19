@@ -14,11 +14,12 @@ class Block {
   public:
     Block(const std::vector<InputPort>& inputPorts,
           const std::vector<OutputPort>& outputPorts)
-        : inputPorts_(inputPorts), outputPorts_(outputPorts){};
+        : id_(nextId_++), inputPorts_(inputPorts), outputPorts_(outputPorts){};
     Block(std::vector<InputPort>&& inputPorts,
           std::vector<OutputPort>&& outputPorts)
-        : inputPorts_(std::move(inputPorts)),
+        : id_(nextId_++), inputPorts_(std::move(inputPorts)),
           outputPorts_(std::move(outputPorts)){};
+    uint32_t getId() const { return id_; };
     std::vector<InputPort>& getInputPorts() { return inputPorts_; }
     std::vector<OutputPort>& getOutputPorts() { return outputPorts_; }
     const std::vector<InputPort>& viewInputPorts() const { return inputPorts_; }
@@ -28,6 +29,8 @@ class Block {
     virtual void evaluate() = 0;
 
   private:
+    static uint32_t nextId_;
+    uint32_t id_;
     std::vector<InputPort> inputPorts_;
     std::vector<OutputPort> outputPorts_;
 };
@@ -36,6 +39,7 @@ class Port {
   public:
     Port(Block& parent) : parent_(parent) {}
     Block& getParent() { return parent_; }
+    const Block& viewParent() { return parent_; }
 
   private:
     Block& parent_;
@@ -61,6 +65,10 @@ class OutputPort : public Port {
         if (destination_.has_value()) {
             destination_->get().setSample(value);
         };
+    }
+    const std::optional<std::reference_wrapper<InputPort>>
+    viewDestination() const {
+        return destination_;
     }
 
   private:
