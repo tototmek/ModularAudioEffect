@@ -6,12 +6,12 @@ int main() {
     spdlog::info("{}", PROJECT_NAME);
     spdlog::info("Version {}", PROJECT_VERSION);
 
-    blocks::Gain gain{1.0f};
+    blocks::Gain gain{2.0f};
     blocks::SingleProcessBlock gain1Block{gain};
     blocks::SingleProcessBlock gain2Block{gain};
     blocks::SingleProcessBlock gain3Block{gain};
     blocks::SingleProcessBlock gain4Block{gain};
-    blocks::Gain attenuation{0.33333f};
+    blocks::Gain attenuation{1.0f / 3.0f};
     blocks::SingleProcessBlock gain5Block{attenuation};
 
     blocks::Delay delay(3.0f / blocks::kSampleRate);
