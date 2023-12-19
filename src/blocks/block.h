@@ -13,26 +13,21 @@ class OutputPort;
 class Block {
   public:
     Block(const std::vector<InputPort>& inputPorts,
-          const std::vector<OutputPort>& outputPorts)
-        : id_(nextId_++), inputPorts_(inputPorts), outputPorts_(outputPorts){};
+          const std::vector<OutputPort>& outputPorts);
     Block(std::vector<InputPort>&& inputPorts,
-          std::vector<OutputPort>&& outputPorts)
-        : id_(nextId_++), inputPorts_(std::move(inputPorts)),
-          outputPorts_(std::move(outputPorts)){};
+          std::vector<OutputPort>&& outputPorts);
     uint32_t getId() const { return id_; };
-    std::vector<InputPort>& getInputPorts() { return inputPorts_; }
-    std::vector<OutputPort>& getOutputPorts() { return outputPorts_; }
-    const std::vector<InputPort>& viewInputPorts() const { return inputPorts_; }
-    const std::vector<OutputPort>& viewOutputPorts() const {
-        return outputPorts_;
-    }
+    std::vector<InputPort>& getInputPorts() { return inPorts_; }
+    std::vector<OutputPort>& getOutputPorts() { return outPorts_; }
+    const std::vector<InputPort>& viewInputPorts() const { return inPorts_; }
+    const std::vector<OutputPort>& viewOutputPorts() const { return outPorts_; }
     virtual void evaluate() = 0;
 
   private:
     static uint32_t nextId_;
     uint32_t id_;
-    std::vector<InputPort> inputPorts_;
-    std::vector<OutputPort> outputPorts_;
+    std::vector<InputPort> inPorts_;
+    std::vector<OutputPort> outPorts_;
 };
 
 class Port {
@@ -48,8 +43,8 @@ class Port {
 class InputPort : public Port {
   public:
     InputPort(Block& parent) : Port(parent) {}
-    float getSample() { return sample_; }
-    void setSample(float value) { sample_ = value; }
+    float getSample();
+    void setSample(float value);
 
   private:
     float sample_ = 0.0f;
@@ -58,21 +53,13 @@ class InputPort : public Port {
 class OutputPort : public Port {
   public:
     OutputPort(Block& parent) : Port(parent) {}
-    void connect(InputPort& destination) {
-        destination_ = std::ref(destination);
-    };
-    void setSample(float value) {
-        if (destination_.has_value()) {
-            destination_->get().setSample(value);
-        };
-    }
-    const std::optional<std::reference_wrapper<InputPort>>
-    viewDestination() const {
-        return destination_;
-    }
+    void connect(InputPort& destination);
+    void setSample(float value);
+    using DestinationPort = std::optional<std::reference_wrapper<InputPort>>;
+    const DestinationPort viewDestination() const;
 
   private:
-    std::optional<std::reference_wrapper<InputPort>> destination_;
+    DestinationPort destination_;
 };
 
 } // namespace blocks
