@@ -18,23 +18,24 @@ int main() {
     blocks::Splitter splitter{2};
     blocks::Adder adder{2};
 
-    gainBlock.getOutputPort().connect(delayBlock.getInputPort());
-    delayBlock.getOutputPort().connect(splitter.getInputPort());
+    gainBlock.getOutputPorts()[0].connect(delayBlock.getInputPorts()[0]);
+    delayBlock.getOutputPorts()[0].connect(splitter.getInputPorts()[0]);
     splitter.getOutputPorts()[0].connect(adder.getInputPorts()[0]);
     splitter.getOutputPorts()[1].connect(adder.getInputPorts()[1]);
-    adder.getOutputPort().connect(sinkBlock.getInputPort());
+    adder.getOutputPorts()[0].connect(sinkBlock.getInputPorts()[0]);
 
     blocks::EvaluationSequence evaluationSequence;
-    evaluationSequence.compute({gainBlock.getInputPort()});
+    evaluationSequence.compute(
+        {gainBlock, delayBlock, splitter, adder, sinkBlock});
 
     const auto processData = [&](float sample) -> float {
         // evaluationSequence.evaluate();
-        gainBlock.getInputPort().setSample(sample);
+        gainBlock.getInputPorts()[0].setSample(sample);
         gainBlock.evaluate();
         delayBlock.evaluate();
         splitter.evaluate();
         adder.evaluate();
-        return sinkBlock.getInputPort().getSample();
+        return sinkBlock.getInputPorts()[0].getSample();
     };
 
     spdlog::info("Delay test");

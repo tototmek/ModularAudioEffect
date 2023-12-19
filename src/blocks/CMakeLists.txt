@@ -7,7 +7,6 @@ set(MODULE_SRC
 processes/gain.cpp
 processes/delay.cpp
 single_process_block.cpp
-composite_block.cpp
 adder.cpp
 splitter.cpp
 evaluation_sequence.cpp

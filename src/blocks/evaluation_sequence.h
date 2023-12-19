@@ -8,7 +8,7 @@ namespace blocks {
 
 class EvaluationSequence {
   public:
-    void compute(const std::vector<std::reference_wrapper<InputPort>>& inputs);
+    void compute(const std::vector<std::reference_wrapper<Block>>& blocks);
     void evaluate();
 
   private:

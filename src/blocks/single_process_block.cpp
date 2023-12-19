@@ -3,11 +3,11 @@
 namespace blocks {
 
 SingleProcessBlock::SingleProcessBlock(Process& process)
-    : inputPort_(*this), outputPort_(*this), process_(process) {}
+    : Block({InputPort(*this)}, {OutputPort(*this)}), process_(process) {}
 
 void SingleProcessBlock::evaluate() {
-    float sample = inputPort_.getSample();
-    outputPort_.setSample(process_.process(sample));
+    float sample = getInputPorts()[0].getSample();
+    getOutputPorts()[0].setSample(process_.process(sample));
 }
 
 } // namespace blocks

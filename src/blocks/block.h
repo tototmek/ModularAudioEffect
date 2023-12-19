@@ -12,7 +12,24 @@ class OutputPort;
 
 class Block {
   public:
+    Block(const std::vector<InputPort>& inputPorts,
+          const std::vector<OutputPort>& outputPorts)
+        : inputPorts_(inputPorts), outputPorts_(outputPorts){};
+    Block(std::vector<InputPort>&& inputPorts,
+          std::vector<OutputPort>&& outputPorts)
+        : inputPorts_(std::move(inputPorts)),
+          outputPorts_(std::move(outputPorts)){};
+    std::vector<InputPort>& getInputPorts() { return inputPorts_; }
+    std::vector<OutputPort>& getOutputPorts() { return outputPorts_; }
+    const std::vector<InputPort>& viewInputPorts() const { return inputPorts_; }
+    const std::vector<OutputPort>& viewOutputPorts() const {
+        return outputPorts_;
+    }
     virtual void evaluate() = 0;
+
+  private:
+    std::vector<InputPort> inputPorts_;
+    std::vector<OutputPort> outputPorts_;
 };
 
 class Port {

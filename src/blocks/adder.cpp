@@ -3,14 +3,15 @@
 namespace blocks {
 
 Adder::Adder(size_t nInputs)
-    : outputPort_(*this), inputPorts_(nInputs, InputPort(*this)) {}
+    : Block(std::vector<InputPort>(nInputs, InputPort(*this)),
+            {OutputPort(*this)}) {}
 
 void Adder::evaluate() {
     float value = 0.0f;
-    for (auto& inputPort : inputPorts_) {
+    for (auto& inputPort : getInputPorts()) {
         value += inputPort.getSample();
     }
-    outputPort_.setSample(value);
+    getOutputPorts()[0].setSample(value);
 }
 
 } // namespace blocks

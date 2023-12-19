@@ -10,12 +10,8 @@ class SingleProcessBlock : public Block {
   public:
     SingleProcessBlock(Process& process);
     void evaluate() override;
-    InputPort& getInputPort() { return inputPort_; }
-    OutputPort& getOutputPort() { return outputPort_; }
 
   private:
-    InputPort inputPort_;
-    OutputPort outputPort_;
     Process& process_;
 };
 

@@ -3,11 +3,12 @@
 namespace blocks {
 
 Splitter::Splitter(size_t nOutputs)
-    : inputPort_(*this), outputPorts_(nOutputs, OutputPort(*this)) {}
+    : Block({InputPort(*this)},
+            std::vector<OutputPort>(nOutputs, OutputPort(*this))) {}
 
 void Splitter::evaluate() {
-    for (auto& outputPort : outputPorts_) {
-        outputPort.setSample(inputPort_.getSample());
+    for (auto& outputPort : getOutputPorts()) {
+        outputPort.setSample(getInputPorts()[0].getSample());
     }
 }
 
