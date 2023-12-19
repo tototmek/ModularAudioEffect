@@ -104,33 +104,43 @@ void EvaluationSequence::compute(
     spdlog::info("Computing operation evaluation order...");
     auto start = std::chrono::high_resolution_clock::now();
 
-    spdlog::debug("Parsing block structure...");
+    spdlog::info("Parsing block structure...");
     // Step 0: Construct graph representation
     auto t1 = std::chrono::high_resolution_clock::now();
     graph_t graph = parseBlockStructure(blocks);
     auto t2 = std::chrono::high_resolution_clock::now();
 
+    spdlog::info("Graph:");
+    for (size_t i = 0; i < graph.outConnections.size(); ++i) {
+        spdlog::info("{}:\t{}", i, fmt::join(graph.outConnections[i], ", "));
+    }
+
     auto duration =
         std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-    spdlog::debug("Took {} microseconds", duration.count());
+    spdlog::info("Took {} microseconds", duration.count());
 
-    spdlog::debug("Cutting cyclic connections...");
+    spdlog::info("Cutting cyclic connections...");
     // Step 1: Disconnect all cyclic dependenciens
     t1 = std::chrono::high_resolution_clock::now();
     disconnectCyclicConnections(graph);
     t2 = std::chrono::high_resolution_clock::now();
 
     duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-    spdlog::debug("Took {} microseconds", duration.count());
+    spdlog::info("Took {} microseconds", duration.count());
 
-    spdlog::debug("Computing operation order...");
+    spdlog::info("Cut graph:");
+    for (size_t i = 0; i < graph.outConnections.size(); ++i) {
+        spdlog::info("{}:\t{}", i, fmt::join(graph.outConnections[i], ", "));
+    }
+
+    spdlog::info("Computing operation order...");
     // Step 2: Find topological ordering
     t1 = std::chrono::high_resolution_clock::now();
     auto orderedNodes = computeTopologicalOrdering(graph);
     t2 = std::chrono::high_resolution_clock::now();
 
     duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-    spdlog::debug("Took {} microseconds", duration.count());
+    spdlog::info("Took {} microseconds", duration.count());
 
     blockSequence_.clear();
     blockSequence_.reserve(orderedNodes.size());

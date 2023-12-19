@@ -35,23 +35,22 @@ int main() {
     gain5Block.getOutputPorts()[0].connect(adder2.getInputPorts()[1]);
 
     blocks::EvaluationSequence evaluationSequence;
-    evaluationSequence.compute({gain1Block, splitter1, gain2Block, adder1,
-                                gain3Block, adder2, delayBlock, splitter2,
-                                gain4Block, gain5Block});
+    evaluationSequence.compute({gain2Block, splitter1, gain1Block, adder2,
+                                gain3Block, adder1, delayBlock, splitter2,
+                                gain5Block, gain4Block});
 
     const auto processData = [&](float sample) -> float {
-        // evaluationSequence.evaluate();
         gain1Block.getInputPorts()[0].setSample(sample);
-        gain1Block.evaluate();
-        splitter1.evaluate();
-        gain2Block.evaluate();
-        adder2.evaluate();
-        delayBlock.evaluate();
-        splitter2.evaluate();
-        gain4Block.evaluate();
-        gain5Block.evaluate();
-        adder1.evaluate();
-        gain3Block.evaluate();
+
+        auto t1 = std::chrono::high_resolution_clock::now();
+        evaluationSequence.evaluate();
+        auto t2 = std::chrono::high_resolution_clock::now();
+
+        auto duration =
+            std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+        spdlog::debug("Graph evaluation took {} microseconds",
+                      duration.count());
+
         return gain3Block.getInputPorts()[0].getSample();
     };
 
