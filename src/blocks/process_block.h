@@ -6,9 +6,9 @@
 
 namespace blocks {
 
-class SingleProcessBlock : public Block {
+class ProcessBlock : public Block {
   public:
-    SingleProcessBlock(Process& process);
+    ProcessBlock(Process& process);
     void evaluate() override;
 
   private:

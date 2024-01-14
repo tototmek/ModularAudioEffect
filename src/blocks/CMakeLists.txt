@@ -6,7 +6,7 @@ include_directories(processes/)
 set(MODULE_SRC 
 processes/gain.cpp
 processes/delay.cpp
-single_process_block.cpp
+process_block.cpp
 adder.cpp
 splitter.cpp
 evaluation_sequence.cpp

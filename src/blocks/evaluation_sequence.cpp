@@ -9,51 +9,44 @@ namespace blocks {
 
 namespace {
 
-struct graph_t {
-    std::vector<std::vector<uint32_t>> outConnections;
-};
+using graph_t = std::map<uint32_t, std::vector<uint32_t>>;
+
+void printGraph(const graph_t& graph) {
+    spdlog::info("Graph:");
+    for (auto const& node : graph) {
+        spdlog::info("{}:\t{}", node.first, fmt::join(node.second, ", "));
+    }
+}
 
 graph_t
 parseBlockStructure(const std::vector<std::reference_wrapper<Block>>& blocks) {
-    graph_t result;
-    std::map<uint32_t, size_t> blockNodeIndexRemap;
-
-    // Find BlockID -> graph node index correspondence
-    size_t index = 0;
-    for (const auto& block : blocks) {
-        blockNodeIndexRemap.emplace(block.get().getId(), index++);
-    }
-
+    graph_t graph;
     // Construct graph
+    std::vector<uint32_t> connections;
     for (const auto& block : blocks) {
-        std::vector<uint32_t> outConnections = {};
+        connections.clear();
         for (const auto& outputPort : block.get().viewOutputPorts()) {
             std::optional<std::reference_wrapper<InputPort>> destination =
                 outputPort.viewDestination();
             if (!destination.has_value()) {
                 continue;
             }
-            uint32_t destinationBlockId =
-                destination.value().get().viewParent().getId();
-            size_t destinationNodeIndex =
-                blockNodeIndexRemap.at(destinationBlockId);
-            outConnections.emplace_back(destinationNodeIndex);
+            connections.emplace_back(
+                destination.value().get().viewParent().getId());
         }
-        result.outConnections.emplace_back(std::move(outConnections));
+        graph.emplace(block.get().getId(), connections);
     }
-
-    return result;
+    return graph;
 }
 
 void tryToCutRecursive(graph_t& graph, uint32_t nodeId,
                        std::vector<bool> visited) {
     visited[nodeId] = true;
-    for (int i = graph.outConnections[nodeId].size() - 1; i >= 0; --i) {
-        uint32_t outConnection = graph.outConnections[nodeId][i];
+    for (int i = graph[nodeId].size() - 1; i >= 0; --i) {
+        uint32_t outConnection = graph[nodeId][i];
         if (visited[outConnection]) {
             // Remove connection from graph
-            graph.outConnections[nodeId].erase(
-                graph.outConnections[nodeId].begin() + i);
+            graph[nodeId].erase(graph[nodeId].begin() + i);
 
         } else {
             tryToCutRecursive(graph, outConnection, visited);
@@ -62,8 +55,7 @@ void tryToCutRecursive(graph_t& graph, uint32_t nodeId,
 }
 
 void disconnectCyclicConnections(graph_t& graph) {
-    tryToCutRecursive(graph, 0,
-                      std::vector<bool>(graph.outConnections.size(), false));
+    tryToCutRecursive(graph, 0, std::vector<bool>(graph.size(), false));
 }
 
 void collapseNodeConnections(const graph_t& graph, uint32_t node,
@@ -71,7 +63,7 @@ void collapseNodeConnections(const graph_t& graph, uint32_t node,
                              std::vector<uint32_t>& result) {
     result.push_back(node);
     inConnectionsCount[node] = 2137; // prevents double checking a node
-    for (uint32_t outConnection : graph.outConnections[node]) {
+    for (uint32_t outConnection : graph.at(node)) {
         --(inConnectionsCount[outConnection]);
         if (inConnectionsCount[outConnection] == 0) {
             collapseNodeConnections(graph, outConnection, inConnectionsCount,
@@ -81,11 +73,11 @@ void collapseNodeConnections(const graph_t& graph, uint32_t node,
 }
 
 std::vector<uint32_t> computeTopologicalOrdering(const graph_t& graph) {
-    size_t nodesCount = graph.outConnections.size();
+    size_t nodesCount = graph.size();
     std::vector<uint32_t> result = {};
     std::vector<uint32_t> inConnectionsCount(nodesCount, 0);
-    for (const auto& nodeConnections : graph.outConnections) {
-        for (uint32_t outConnection : nodeConnections) {
+    for (const auto& node : graph) {
+        for (uint32_t outConnection : node.second) {
             ++(inConnectionsCount[outConnection]);
         }
     }
@@ -110,14 +102,12 @@ void EvaluationSequence::compute(
     graph_t graph = parseBlockStructure(blocks);
     auto t2 = std::chrono::high_resolution_clock::now();
 
-    spdlog::info("Graph:");
-    for (size_t i = 0; i < graph.outConnections.size(); ++i) {
-        spdlog::info("{}:\t{}", i, fmt::join(graph.outConnections[i], ", "));
-    }
-
     auto duration =
         std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
     spdlog::info("Took {} microseconds", duration.count());
+
+    spdlog::info("Parsed graph:");
+    printGraph(graph);
 
     spdlog::info("Cutting cyclic connections...");
     // Step 1: Disconnect all cyclic dependenciens
@@ -129,9 +119,7 @@ void EvaluationSequence::compute(
     spdlog::info("Took {} microseconds", duration.count());
 
     spdlog::info("Cut graph:");
-    for (size_t i = 0; i < graph.outConnections.size(); ++i) {
-        spdlog::info("{}:\t{}", i, fmt::join(graph.outConnections[i], ", "));
-    }
+    printGraph(graph);
 
     spdlog::info("Computing operation order...");
     // Step 2: Find topological ordering

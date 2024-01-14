@@ -6,38 +6,28 @@ int main() {
     spdlog::info("{}", PROJECT_NAME);
     spdlog::info("Version {}", PROJECT_VERSION);
 
-    blocks::Gain gain{2.0f};
-    blocks::SingleProcessBlock gain1Block{gain};
-    blocks::SingleProcessBlock gain2Block{gain};
-    blocks::SingleProcessBlock gain3Block{gain};
-    blocks::SingleProcessBlock gain4Block{gain};
-    blocks::Gain attenuation{1.0f / 3.0f};
-    blocks::SingleProcessBlock gain5Block{attenuation};
+    // Change the structure: blocks should have less responsibility: they should
+    // be put in a container that manages their connections and the evaluation
+    // order. Maybe use composite design pattern
 
-    blocks::Delay delay(3.0f / blocks::kSampleRate);
-    blocks::SingleProcessBlock delayBlock{delay};
+    blocks::Gain gain{1.0f};
+    blocks::ProcessBlock gain1Block{gain};
+    blocks::Adder adder{2};
+    blocks::ProcessBlock gain2Block{gain};
+    blocks::Splitter splitter{2};
+    blocks::ProcessBlock gain3Block{gain};
+    blocks::ProcessBlock gain4Block{gain};
 
-    blocks::Splitter splitter1{2};
-    blocks::Splitter splitter2{2};
-    blocks::Adder adder1{2};
-    blocks::Adder adder2{2};
-
-    gain1Block.getOutputPorts()[0].connect(splitter1.getInputPorts()[0]);
-    splitter1.getOutputPorts()[0].connect(gain2Block.getInputPorts()[0]);
-    splitter1.getOutputPorts()[1].connect(adder2.getInputPorts()[0]);
-    gain2Block.getOutputPorts()[0].connect(adder1.getInputPorts()[0]);
-    adder1.getOutputPorts()[0].connect(gain3Block.getInputPorts()[0]);
-    adder2.getOutputPorts()[0].connect(delayBlock.getInputPorts()[0]);
-    delayBlock.getOutputPorts()[0].connect(splitter2.getInputPorts()[0]);
-    splitter2.getOutputPorts()[0].connect(gain4Block.getInputPorts()[0]);
-    splitter2.getOutputPorts()[1].connect(gain5Block.getInputPorts()[0]);
-    gain4Block.getOutputPorts()[0].connect(adder1.getInputPorts()[1]);
-    gain5Block.getOutputPorts()[0].connect(adder2.getInputPorts()[1]);
+    gain1Block.getOutputPorts()[0].connect(adder.getInputPorts()[0]);
+    adder.getOutputPorts()[0].connect(gain2Block.getInputPorts()[0]);
+    gain2Block.getOutputPorts()[0].connect(splitter.getInputPorts()[0]);
+    splitter.getOutputPorts()[0].connect(gain3Block.getInputPorts()[0]);
+    splitter.getOutputPorts()[1].connect(gain4Block.getInputPorts()[0]);
+    gain4Block.getOutputPorts()[0].connect(adder.getInputPorts()[1]);
 
     blocks::EvaluationSequence evaluationSequence;
-    evaluationSequence.compute({gain2Block, splitter1, gain1Block, adder2,
-                                gain3Block, adder1, delayBlock, splitter2,
-                                gain5Block, gain4Block});
+    evaluationSequence.compute(
+        {gain1Block, splitter, gain3Block, adder, gain4Block, gain2Block});
 
     const auto processData = [&](float sample) -> float {
         gain1Block.getInputPorts()[0].setSample(sample);
