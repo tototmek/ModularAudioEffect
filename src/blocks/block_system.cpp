@@ -20,7 +20,7 @@ void BlockSystem::evaluate() {
     for (auto blockIdx : evalSequence_) {
         auto block = blocks_[blockIdx];
         block->evaluate();
-        for (auto connection : connections_[block]) {
+        for (const auto& connection : connections_[block]) {
             float value =
                 connection.source.block->getOutput(connection.source.port);
             connection.target.block->setInput(value, connection.target.port);

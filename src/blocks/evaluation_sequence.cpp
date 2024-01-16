@@ -1,5 +1,6 @@
 #include "evaluation_sequence.h"
 #include <chrono>
+#include <limits>
 #include <map>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
@@ -9,7 +10,7 @@ namespace blocks {
 
 namespace {
 
-using graph_t = std::map<uint32_t, std::vector<uint32_t>>;
+using graph_t = std::map<uint, std::vector<uint>>;
 
 void printGraph(const graph_t& graph) {
     spdlog::info("Graph:");
@@ -25,10 +26,10 @@ graph_t parseBlockStructure(const Blocks_t blocks,
     for (uint i = 0; i < blocks.size(); ++i) {
         block2IndexMap.emplace(blocks[i], i);
     }
-    std::vector<uint32_t> blockConnections;
-    for (auto& [block, connection] : connections) {
+    std::vector<uint> blockConnections;
+    for (const auto& [block, connection] : connections) {
         blockConnections.clear();
-        for (auto element : connection) {
+        for (const auto& element : connection) {
             uint blockIndex = block2IndexMap[element.target.block];
             blockConnections.emplace_back(blockIndex);
         }
@@ -37,14 +38,13 @@ graph_t parseBlockStructure(const Blocks_t blocks,
     return graph;
 }
 
-void tryToCutRecursive(graph_t& graph, uint32_t nodeId,
-                       std::vector<bool> visited) {
+void tryToCutRecursive(graph_t& graph, uint nodeId, std::vector<bool> visited) {
     visited[nodeId] = true;
-    for (int i = graph[nodeId].size() - 1; i >= 0; --i) {
-        uint32_t outConnection = graph[nodeId][i];
+    for (uint i = graph[nodeId].size(); i >= 1; --i) {
+        uint outConnection = graph[nodeId][i - 1];
         if (visited[outConnection]) {
             // Remove connection from graph
-            graph[nodeId].erase(graph[nodeId].begin() + i);
+            graph[nodeId].erase(graph[nodeId].begin() + i - 1);
 
         } else {
             tryToCutRecursive(graph, outConnection, visited);
@@ -56,12 +56,13 @@ void disconnectCyclicConnections(graph_t& graph) {
     tryToCutRecursive(graph, 0, std::vector<bool>(graph.size(), false));
 }
 
-void collapseNodeConnections(const graph_t& graph, uint32_t node,
-                             std::vector<uint32_t>& inConnectionsCount,
-                             std::vector<uint32_t>& result) {
+void collapseNodeConnections(const graph_t& graph, uint node,
+                             std::vector<uint>& inConnectionsCount,
+                             std::vector<uint>& result) {
     result.push_back(node);
-    inConnectionsCount[node] = 2137; // prevents double checking a node
-    for (uint32_t outConnection : graph.at(node)) {
+    inConnectionsCount[node] =
+        std::numeric_limits<uint>::max(); // prevents double checking a node
+    for (uint outConnection : graph.at(node)) {
         --(inConnectionsCount[outConnection]);
         if (inConnectionsCount[outConnection] == 0) {
             collapseNodeConnections(graph, outConnection, inConnectionsCount,
@@ -70,12 +71,12 @@ void collapseNodeConnections(const graph_t& graph, uint32_t node,
     }
 }
 
-std::vector<uint32_t> computeTopologicalOrdering(const graph_t& graph) {
+std::vector<uint> computeTopologicalOrdering(const graph_t& graph) {
     size_t nodesCount = graph.size();
-    std::vector<uint32_t> result = {};
-    std::vector<uint32_t> inConnectionsCount(nodesCount, 0);
+    std::vector<uint> result = {};
+    std::vector<uint> inConnectionsCount(nodesCount, 0);
     for (const auto& node : graph) {
-        for (uint32_t outConnection : node.second) {
+        for (uint outConnection : node.second) {
             ++(inConnectionsCount[outConnection]);
         }
     }
