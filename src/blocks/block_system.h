@@ -34,13 +34,10 @@ class BlockSystem : public BlockComposite {
     void removeInput(Port port);
     void addOutput(Port port);
     void removeOutput(Port port);
-    const std::vector<uint>& viewEvaluationSequence() {
-        updateEvaluationSequence();
-        return evalSequence_;
-    }
+    void updateEvaluationSequence();
+    const std::vector<uint>& viewEvaluationSequence() { return evalSequence_; }
 
   private:
-    void updateEvaluationSequence();
     bool shouldUpdateEvalSequence_ = false;
     std::vector<uint> evalSequence_;
     std::map<std::shared_ptr<Block>, std::vector<Connection>> connections_;

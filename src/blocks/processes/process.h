@@ -1,5 +1,5 @@
-#ifndef BLOCKS_PROCESS_H
-#define BLOCKS_PROCESS_H
+#ifndef BLOCKS_PROCESSES_PROCESS_H
+#define BLOCKS_PROCESSES_PROCESS_H
 
 #include <cstddef>
 
@@ -20,4 +20,4 @@ class Process {
 
 } // namespace blocks
 
-#endif // BLOCKS_PROCESS_H
+#endif // BLOCKS_PROCESSES_PROCESS_H

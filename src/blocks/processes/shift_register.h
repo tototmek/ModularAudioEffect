@@ -1,5 +1,5 @@
-#ifndef BLOCKS_SHIFT_REGISTER_H
-#define BLOCKS_SHIFT_REGISTER_H
+#ifndef BLOCKS_PROCESSES_SHIFT_REGISTER_H
+#define BLOCKS_PROCESSES_SHIFT_REGISTER_H
 #include <cassert>
 #include <vector>
 
@@ -34,4 +34,4 @@ template <typename T> class ShiftRegister {
 
 } // namespace blocks
 
-#endif // BLOCKS_SHIFT_REGISTER_H
+#endif // BLOCKS_PROCESSES_SHIFT_REGISTER_H

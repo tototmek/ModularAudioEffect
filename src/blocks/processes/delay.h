@@ -1,5 +1,5 @@
-#ifndef BLOCKS_DELAY_H
-#define BLOCKS_DELAY_H
+#ifndef BLOCKS_PROCESSES_DELAY_H
+#define BLOCKS_PROCESSES_DELAY_H
 
 #include "process.h"
 #include "shift_register.h"
@@ -18,4 +18,4 @@ class Delay : public Process {
 
 } // namespace blocks
 
-#endif // BLOCKS_DELAY_H
+#endif // BLOCKS_PROCESSES_DELAY_H

@@ -17,6 +17,7 @@ endif()
 if (NOT TARGET spdlog)
     find_package(spdlog REQUIRED)
 endif()
+set(EXTERNAL_LIBS ${EXTERNAL_LIBS} spdlog::spdlog)
 
 # add submodules
 add_subdirectory(src/blocks)
@@ -24,6 +25,17 @@ set(PROJECT_LIBS ${PROJECT_LIBS} blocks)
 
 add_executable(${PROJECT_NAME} src/main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE 
-    spdlog::spdlog
     ${PROJECT_LIBS}
+    ${EXTERNAL_LIBS}
 )
+
+SET(ENABLE_TESTING TRUE CACHE BOOL "Enable testing")
+if (${ENABLE_TESTING}) 
+# add tests
+    add_subdirectory(test)
+    enable_testing()
+    add_test(
+        NAME UnitTests
+        COMMAND $<TARGET_FILE:UnitTests>
+    )
+endif()

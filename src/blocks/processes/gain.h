@@ -1,5 +1,5 @@
-#ifndef BLOCKS_GAIN_H
-#define BLOCKS_GAIN_H
+#ifndef BLOCKS_PROCESSES_GAIN_H
+#define BLOCKS_PROCESSES_GAIN_H
 
 #include "process.h"
 
@@ -16,4 +16,4 @@ class Gain : public Process {
 
 } // namespace blocks
 
-#endif // BLOCKS_GAIN_H
+#endif // BLOCKS_PROCESSES_GAIN_H

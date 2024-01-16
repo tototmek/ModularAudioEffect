@@ -1,4 +1,4 @@
-#include "blocks/core.h"
+#include "blocks/blocks.h"
 #include "project_info.h"
 #include <spdlog/spdlog.h>
 
