@@ -10,7 +10,7 @@ configure_file(src/project_info.h.in project_info.h)
 include_directories(${CMAKE_BINARY_DIR})
 
 if (NOT WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wpedantic")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
 endif()
 
 # add dependencies

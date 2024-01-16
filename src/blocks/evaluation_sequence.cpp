@@ -18,23 +18,21 @@ void printGraph(const graph_t& graph) {
     }
 }
 
-graph_t
-parseBlockStructure(const std::vector<std::reference_wrapper<Block>>& blocks) {
+graph_t parseBlockStructure(const Blocks_t blocks,
+                            const Connections_t& connections) {
     graph_t graph;
-    // Construct graph
-    std::vector<uint32_t> connections;
-    for (const auto& block : blocks) {
-        connections.clear();
-        for (const auto& outputPort : block.get().viewOutputPorts()) {
-            std::optional<std::reference_wrapper<InputPort>> destination =
-                outputPort.viewDestination();
-            if (!destination.has_value()) {
-                continue;
-            }
-            connections.emplace_back(
-                destination.value().get().viewParent().getId());
+    std::map<std::shared_ptr<Block>, uint> block2IndexMap;
+    for (uint i = 0; i < blocks.size(); ++i) {
+        block2IndexMap.emplace(blocks[i], i);
+    }
+    std::vector<uint32_t> blockConnections;
+    for (auto& [block, connection] : connections) {
+        blockConnections.clear();
+        for (auto element : connection) {
+            uint blockIndex = block2IndexMap[element.target.block];
+            blockConnections.emplace_back(blockIndex);
         }
-        graph.emplace(block.get().getId(), connections);
+        graph.emplace(block2IndexMap[block], blockConnections);
     }
     return graph;
 }
@@ -91,15 +89,15 @@ std::vector<uint32_t> computeTopologicalOrdering(const graph_t& graph) {
 
 } // namespace
 
-void EvaluationSequence::compute(
-    const std::vector<std::reference_wrapper<Block>>& blocks) {
+std::vector<uint> computeEvaluationSequence(const Blocks_t& blocks,
+                                            const Connections_t& connections) {
     spdlog::info("Computing operation evaluation order...");
     auto start = std::chrono::high_resolution_clock::now();
 
     spdlog::info("Parsing block structure...");
     // Step 0: Construct graph representation
     auto t1 = std::chrono::high_resolution_clock::now();
-    graph_t graph = parseBlockStructure(blocks);
+    graph_t graph = parseBlockStructure(blocks, connections);
     auto t2 = std::chrono::high_resolution_clock::now();
 
     auto duration =
@@ -130,23 +128,20 @@ void EvaluationSequence::compute(
     duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
     spdlog::info("Took {} microseconds", duration.count());
 
-    blockSequence_.clear();
-    blockSequence_.reserve(orderedNodes.size());
-    for (size_t i = 0; i < orderedNodes.size(); ++i) {
-        blockSequence_.push_back(blocks[orderedNodes[i]]);
-    }
+    // sequence.clear();
+    // sequence.reserve(orderedNodes.size());
+    // for (size_t i = 0; i < orderedNodes.size(); ++i) {
+    //     sequence.emplace_back(orderedNodes[i]);
+    // }
+    // sequence.emplace_back(1);
 
     auto end = std::chrono::high_resolution_clock::now();
     auto deltatime =
         std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     spdlog::info("\t -> Elapsed time: {} microseconds", deltatime.count());
     spdlog::info("\t -> Order: {}", fmt::join(orderedNodes, ", "));
-}
 
-void EvaluationSequence::evaluate() {
-    for (auto& block : blockSequence_) {
-        block.get().evaluate();
-    }
+    return orderedNodes;
 }
 
 } // namespace blocks

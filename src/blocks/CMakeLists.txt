@@ -4,13 +4,12 @@ set(LIBRARY_NAME "${MODULE_NAME}")
 include_directories(processes/)
 
 set(MODULE_SRC 
-processes/gain.cpp
-processes/delay.cpp
-process_block.cpp
-adder.cpp
-splitter.cpp
-evaluation_sequence.cpp
 block.cpp
+block_system.cpp
+evaluation_sequence.cpp
+process_block.cpp
+processes/delay.cpp
+processes/gain.cpp
 )
 
 add_library(${LIBRARY_NAME} STATIC ${MODULE_SRC})

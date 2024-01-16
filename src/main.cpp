@@ -6,34 +6,54 @@ int main() {
     spdlog::info("{}", PROJECT_NAME);
     spdlog::info("Version {}", PROJECT_VERSION);
 
-    // Change the structure: blocks should have less responsibility: they should
-    // be put in a container that manages their connections and the evaluation
-    // order. Maybe use composite design pattern
+    auto unusedGainBlock = std::make_shared<blocks::ProcessBlock>(
+        std::make_unique<blocks::Gain>(1.0));
+    auto gain1Block = std::make_shared<blocks::ProcessBlock>(
+        std::make_unique<blocks::Gain>(1.0));
+    auto gain2Block = std::make_shared<blocks::ProcessBlock>(
+        std::make_unique<blocks::Gain>(2.0));
+    auto gain3Block = std::make_shared<blocks::ProcessBlock>(
+        std::make_unique<blocks::Gain>(3.0));
+    auto gain4Block = std::make_shared<blocks::ProcessBlock>(
+        std::make_unique<blocks::Gain>(4.0));
+    auto blockSystem = std::make_shared<blocks::BlockSystem>();
 
-    blocks::Gain gain{1.0f};
-    blocks::ProcessBlock gain1Block{gain};
-    blocks::Adder adder{2};
-    blocks::ProcessBlock gain2Block{gain};
-    blocks::Splitter splitter{2};
-    blocks::ProcessBlock gain3Block{gain};
-    blocks::ProcessBlock gain4Block{gain};
+    blockSystem->addBlock(gain1Block);
+    blockSystem->addBlock(gain2Block);
+    blockSystem->addBlock(gain3Block);
+    blockSystem->addBlock(gain4Block);
 
-    gain1Block.getOutputPorts()[0].connect(adder.getInputPorts()[0]);
-    adder.getOutputPorts()[0].connect(gain2Block.getInputPorts()[0]);
-    gain2Block.getOutputPorts()[0].connect(splitter.getInputPorts()[0]);
-    splitter.getOutputPorts()[0].connect(gain3Block.getInputPorts()[0]);
-    splitter.getOutputPorts()[1].connect(gain4Block.getInputPorts()[0]);
-    gain4Block.getOutputPorts()[0].connect(adder.getInputPorts()[1]);
+    blocks::Connection connection;
+    connection.source.block = gain1Block;
+    connection.source.port = 0;
+    connection.target.block = gain2Block;
+    connection.target.port = 0;
+    blockSystem->addConnection(connection);
+    connection.source.block = gain2Block;
+    connection.source.port = 0;
+    connection.target.block = gain3Block;
+    connection.target.port = 0;
+    blockSystem->addConnection(connection);
+    connection.source.block = gain3Block;
+    connection.source.port = 0;
+    connection.target.block = gain4Block;
+    connection.target.port = 0;
+    blockSystem->addConnection(connection);
 
-    blocks::EvaluationSequence evaluationSequence;
-    evaluationSequence.compute(
-        {gain1Block, splitter, gain3Block, adder, gain4Block, gain2Block});
+    blocks::Port in;
+    in.block = gain1Block;
+    in.port = 0;
+    blockSystem->addInput(in);
+
+    blocks::Port out;
+    out.block = gain4Block;
+    out.port = 0;
+    blockSystem->addOutput(out);
 
     const auto processData = [&](float sample) -> float {
-        gain1Block.getInputPorts()[0].setSample(sample);
-
+        blockSystem->setInput(sample);
         auto t1 = std::chrono::high_resolution_clock::now();
-        evaluationSequence.evaluate();
+        blockSystem->evaluate();
         auto t2 = std::chrono::high_resolution_clock::now();
 
         auto duration =
@@ -41,7 +61,7 @@ int main() {
         spdlog::debug("Graph evaluation took {} microseconds",
                       duration.count());
 
-        return gain3Block.getInputPorts()[0].getSample();
+        return blockSystem->getOutput();
     };
 
     spdlog::info("Delay test");

@@ -1,19 +1,17 @@
 #ifndef BLOCKS_EVALUATION_SEQUENCE_H
 #define BLOCKS_EVALUATION_SEQUENCE_H
 
-#include "block.h"
+#include "block_system.h"
+#include <map>
 #include <vector>
 
 namespace blocks {
 
-class EvaluationSequence {
-  public:
-    void compute(const std::vector<std::reference_wrapper<Block>>& blocks);
-    void evaluate();
+using Blocks_t = std::vector<std::shared_ptr<Block>>;
+using Connections_t = std::map<std::shared_ptr<Block>, std::vector<Connection>>;
 
-  private:
-    std::vector<std::reference_wrapper<Block>> blockSequence_;
-};
+std::vector<uint> computeEvaluationSequence(const Blocks_t& blocks,
+                                            const Connections_t& connections);
 
 } // namespace blocks
 

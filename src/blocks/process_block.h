@@ -6,13 +6,13 @@
 
 namespace blocks {
 
-class ProcessBlock : public Block {
+class ProcessBlock : public BlockAtomic {
   public:
-    ProcessBlock(Process& process);
+    ProcessBlock(std::unique_ptr<Process> process);
     void evaluate() override;
 
   private:
-    Process& process_;
+    std::unique_ptr<Process> process_;
 };
 
 } // namespace blocks
