@@ -18,7 +18,7 @@ void Block::setInput(float value, uint portIdx) {
     inputs_[portIdx] = value;
 }
 
-float Block::getOutput(uint portIdx) {
+float Block::getOutput(uint portIdx) const {
     if (portIdx >= outputs_.size()) {
         throw illegal_port_error(
             fmt::format("Requested block output with index '{}' out of bounds "
@@ -27,6 +27,9 @@ float Block::getOutput(uint portIdx) {
     }
     return outputs_[portIdx];
 }
+
+uint Block::getInputSize() const { return inputs_.size(); }
+uint Block::getOutputSize() const { return outputs_.size(); }
 
 BlockAtomic::BlockAtomic(uint nInputs, uint nOutputs)
     : Block(nInputs, nOutputs) {}

@@ -13,7 +13,9 @@ class Block {
     Block(uint nInputs, uint nOutputs);
     virtual void evaluate() = 0;
     void setInput(float value, uint portIdx = 0);
-    float getOutput(uint portIdx = 0);
+    float getOutput(uint portIdx = 0) const;
+    uint getInputSize() const;
+    uint getOutputSize() const;
 
   protected:
     PortValues_t inputs_;

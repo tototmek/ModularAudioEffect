@@ -50,6 +50,12 @@ int main() {
     out.port = 0;
     blockSystem->addOutput(out);
 
+    try {
+    } catch (std::exception& e) {
+        spdlog::info(e.what());
+        exit(1);
+    }
+
     const auto processData = [&](float sample) -> float {
         blockSystem->setInput(sample);
         auto t1 = std::chrono::high_resolution_clock::now();

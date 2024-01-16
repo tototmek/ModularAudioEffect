@@ -8,8 +8,9 @@ namespace blocks {
 
 class base_exception : public std::exception {
   public:
-    base_exception(const std::string message) : msg_{message} {}
-    virtual std::string what() { return msg_; }
+    base_exception(const std::string& message) : msg_{message} {}
+    ~base_exception() throw() {}
+    const char* what() const throw() { return msg_.c_str(); }
 
   private:
     std::string msg_;

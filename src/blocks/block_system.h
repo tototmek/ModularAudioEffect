@@ -10,8 +10,8 @@ namespace blocks {
 
 struct Port {
     std::shared_ptr<Block> block;
-    uint port;
-    bool operator==(const Port& rhs) {
+    uint port = 0;
+    bool operator==(const Port& rhs) const {
         return (block == rhs.block && port == rhs.port);
     }
 };
@@ -19,7 +19,7 @@ struct Port {
 struct Connection {
     Port source;
     Port target;
-    bool operator==(const Connection& rhs) {
+    bool operator==(const Connection& rhs) const {
         return (source == rhs.source && target == rhs.target);
     }
 };
@@ -36,8 +36,12 @@ class BlockSystem : public BlockComposite {
     void removeOutput(Port port);
     void updateEvaluationSequence();
     const std::vector<uint>& viewEvaluationSequence() { return evalSequence_; }
+    bool hasBlock(std::shared_ptr<Block> block) const;
+    bool hasConnection(Connection connection) const;
 
   private:
+    enum class PortType { INPUT, OUTPUT };
+    bool isPortConnected(Port port, PortType type) const;
     bool shouldUpdateEvalSequence_ = false;
     std::vector<uint> evalSequence_;
     std::map<std::shared_ptr<Block>, std::vector<Connection>> connections_;
