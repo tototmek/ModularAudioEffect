@@ -1,5 +1,3 @@
-find_package(Catch2 3 REQUIRED)
-
 set(tests_SRC
 test_blocks.cpp
 )

@@ -14,10 +14,7 @@ if (NOT WIN32)
 endif()
 
 # add dependencies
-if (NOT TARGET spdlog)
-    find_package(spdlog REQUIRED)
-endif()
-set(EXTERNAL_LIBS ${EXTERNAL_LIBS} spdlog::spdlog)
+include(cmake/fetch_dependencies.cmake)
 
 # add submodules
 add_subdirectory(src/blocks)

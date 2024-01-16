@@ -2,7 +2,6 @@
 #include "evaluation_sequence.h"
 #include "exceptions.h"
 #include <algorithm>
-#include <spdlog/spdlog.h>
 
 namespace blocks {
 
