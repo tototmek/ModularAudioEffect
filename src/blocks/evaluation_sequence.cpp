@@ -13,9 +13,9 @@ namespace {
 using graph_t = std::map<uint, std::vector<uint>>;
 
 void printGraph(const graph_t& graph) {
-    spdlog::info("Graph:");
+    spdlog::debug("Graph:");
     for (auto const& node : graph) {
-        spdlog::info("{}:\t{}", node.first, fmt::join(node.second, ", "));
+        spdlog::debug("{}:\t{}", node.first, fmt::join(node.second, ", "));
     }
 }
 
@@ -92,10 +92,10 @@ std::vector<uint> computeTopologicalOrdering(const graph_t& graph) {
 
 std::vector<uint> computeEvaluationSequence(const Blocks_t& blocks,
                                             const Connections_t& connections) {
-    spdlog::info("Computing operation evaluation order...");
+    spdlog::debug("Computing operation evaluation order...");
     auto start = std::chrono::high_resolution_clock::now();
 
-    spdlog::info("Parsing block structure...");
+    spdlog::debug("Parsing block structure...");
     // Step 0: Construct graph representation
     auto t1 = std::chrono::high_resolution_clock::now();
     graph_t graph = parseBlockStructure(blocks, connections);
@@ -103,44 +103,36 @@ std::vector<uint> computeEvaluationSequence(const Blocks_t& blocks,
 
     auto duration =
         std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-    spdlog::info("Took {} microseconds", duration.count());
+    spdlog::debug("Took {} microseconds", duration.count());
 
-    spdlog::info("Parsed graph:");
+    spdlog::debug("Parsed graph:");
     printGraph(graph);
 
-    spdlog::info("Cutting cyclic connections...");
+    spdlog::debug("Cutting cyclic connections...");
     // Step 1: Disconnect all cyclic dependenciens
     t1 = std::chrono::high_resolution_clock::now();
     disconnectCyclicConnections(graph);
     t2 = std::chrono::high_resolution_clock::now();
 
     duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-    spdlog::info("Took {} microseconds", duration.count());
+    spdlog::debug("Took {} microseconds", duration.count());
 
-    spdlog::info("Cut graph:");
+    spdlog::debug("Cut graph:");
     printGraph(graph);
 
-    spdlog::info("Computing operation order...");
+    spdlog::debug("Computing operation order...");
     // Step 2: Find topological ordering
     t1 = std::chrono::high_resolution_clock::now();
     auto orderedNodes = computeTopologicalOrdering(graph);
     t2 = std::chrono::high_resolution_clock::now();
 
     duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-    spdlog::info("Took {} microseconds", duration.count());
-
-    // sequence.clear();
-    // sequence.reserve(orderedNodes.size());
-    // for (size_t i = 0; i < orderedNodes.size(); ++i) {
-    //     sequence.emplace_back(orderedNodes[i]);
-    // }
-    // sequence.emplace_back(1);
-
+    spdlog::debug("Took {} microseconds", duration.count());
     auto end = std::chrono::high_resolution_clock::now();
     auto deltatime =
         std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    spdlog::info("\t -> Elapsed time: {} microseconds", deltatime.count());
-    spdlog::info("\t -> Order: {}", fmt::join(orderedNodes, ", "));
+    spdlog::debug("\t -> Elapsed time: {} microseconds", deltatime.count());
+    spdlog::debug("\t -> Order: {}", fmt::join(orderedNodes, ", "));
 
     return orderedNodes;
 }

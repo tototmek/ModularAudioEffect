@@ -2,6 +2,7 @@
 #include "evaluation_sequence.h"
 #include "exceptions.h"
 #include <algorithm>
+#include <spdlog/spdlog.h>
 
 namespace blocks {
 
@@ -32,6 +33,19 @@ void BlockSystem::evaluate() {
         auto port = outputConnections_[i];
         outputs_[i] = port.block->getOutput(port.port);
     }
+}
+
+void BlockSystem::addBlock(std::shared_ptr<Block> block) {
+    BlockComposite::addBlock(block);
+    connections_.emplace(block, std::vector<Connection>());
+}
+
+void BlockSystem::removeBlock(std::shared_ptr<Block> block) {
+    BlockComposite::removeBlock(block);
+    auto it = connections_.find(block);
+    connections_.erase(it);
+    breakConnectionsTo(block);
+    breakInputsOutputsTo(block);
 }
 
 void BlockSystem::addConnection(Connection connection) {
@@ -67,27 +81,43 @@ void BlockSystem::removeConnection(Connection connection) {
 }
 
 void BlockSystem::addInput(Port port) {
+    if (isPortConnected(port, PortType::INPUT) ||
+        port.block->getInputSize() <= port.port) {
+        throw invalid_operation_error("Cannot add input: invalid port");
+    }
     inputs_.emplace_back(0.0f);
     inputConnections_.emplace_back(port);
 }
 
 void BlockSystem::removeInput(Port port) {
-    uint portIdx =
-        std::find(inputConnections_.begin(), inputConnections_.end(), port) -
-        inputConnections_.begin();
+    auto it =
+        std::find(inputConnections_.cbegin(), inputConnections_.cend(), port);
+    if (it == inputConnections_.cend()) {
+        throw invalid_operation_error(
+            "Cannot remove input: port is not an input");
+    }
+    uint portIdx = it - inputConnections_.cbegin();
     inputConnections_.erase(inputConnections_.begin() + portIdx);
     inputs_.erase(inputs_.begin() + portIdx);
 }
 
 void BlockSystem::addOutput(Port port) {
+    if (isPortConnected(port, PortType::OUTPUT) ||
+        port.block->getOutputSize() <= port.port) {
+        throw invalid_operation_error("Cannot add output: invalid port");
+    }
     outputs_.emplace_back(0.0f);
     outputConnections_.emplace_back(port);
 }
 
 void BlockSystem::removeOutput(Port port) {
-    uint portIdx =
-        std::find(outputConnections_.begin(), outputConnections_.end(), port) -
-        outputConnections_.begin();
+    auto it =
+        std::find(outputConnections_.cbegin(), outputConnections_.cend(), port);
+    if (it == outputConnections_.cend()) {
+        throw invalid_operation_error(
+            "Cannot remove output: port is not an output");
+    }
+    uint portIdx = it - outputConnections_.cbegin();
     outputConnections_.erase(outputConnections_.begin() + portIdx);
     outputs_.erase(outputs_.begin() + portIdx);
 }
@@ -113,6 +143,7 @@ bool BlockSystem::hasConnection(Connection connection) const {
 }
 
 bool BlockSystem::isPortConnected(Port port, PortType type) const {
+    // Check if port is used by a block connection
     for (const auto& [block, block_connections] : connections_) {
         for (const auto& connection : block_connections) {
             if ((connection.source == port && type == PortType::OUTPUT) ||
@@ -121,7 +152,42 @@ bool BlockSystem::isPortConnected(Port port, PortType type) const {
             }
         }
     }
-    return false;
+    // Check if port is used by block system input/output
+    return ((type == PortType::INPUT &&
+             std::find(inputConnections_.cbegin(), inputConnections_.cend(),
+                       port) != inputConnections_.cend()) ||
+            (type == PortType::OUTPUT &&
+             std::find(outputConnections_.cbegin(), outputConnections_.cend(),
+                       port) != outputConnections_.cend()));
+}
+
+void BlockSystem::breakConnectionsTo(std::shared_ptr<Block> block) {
+    auto findNextConnectionTo = [](std::shared_ptr<Block> block,
+                                   const std::vector<Connection>& connections) {
+        return std::find_if(connections.cbegin(), connections.cend(),
+                            [block](Connection connection) {
+                                return connection.target.block == block;
+                            });
+    };
+    for (auto& [source_block, block_connections] : connections_) {
+        auto it = findNextConnectionTo(block, block_connections);
+        if (it != block_connections.cend()) {
+            block_connections.erase(it);
+            it = findNextConnectionTo(block, block_connections);
+        }
+    }
+}
+void BlockSystem::breakInputsOutputsTo(std::shared_ptr<Block> block) {
+    for (const auto& port : inputConnections_) {
+        if (port.block == block) {
+            removeInput(port);
+        }
+    }
+    for (const auto& port : outputConnections_) {
+        if (port.block == block) {
+            removeOutput(port);
+        }
+    }
 }
 
 } // namespace blocks

@@ -32,8 +32,8 @@ class BlockComposite : public Block {
   public:
     BlockComposite(uint nInputs, uint nOutputs);
     virtual void evaluate() override = 0;
-    void addBlock(std::shared_ptr<Block> block);
-    void removeBlock(std::shared_ptr<Block> block);
+    virtual void addBlock(std::shared_ptr<Block> block);
+    virtual void removeBlock(std::shared_ptr<Block> block);
 
   protected:
     std::vector<std::shared_ptr<Block>> blocks_;

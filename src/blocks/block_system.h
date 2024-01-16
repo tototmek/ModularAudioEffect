@@ -28,6 +28,8 @@ class BlockSystem : public BlockComposite {
   public:
     BlockSystem();
     void evaluate() override;
+    void addBlock(std::shared_ptr<Block> block) override;
+    void removeBlock(std::shared_ptr<Block> block) override;
     void addConnection(Connection connection);
     void removeConnection(Connection connection);
     void addInput(Port port);
@@ -42,6 +44,8 @@ class BlockSystem : public BlockComposite {
   private:
     enum class PortType { INPUT, OUTPUT };
     bool isPortConnected(Port port, PortType type) const;
+    void breakConnectionsTo(std::shared_ptr<Block> block);
+    void breakInputsOutputsTo(std::shared_ptr<Block> block);
     bool shouldUpdateEvalSequence_ = false;
     std::vector<uint> evalSequence_;
     std::map<std::shared_ptr<Block>, std::vector<Connection>> connections_;
