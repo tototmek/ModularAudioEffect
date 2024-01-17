@@ -3,15 +3,12 @@ include(FetchContent)
 FetchContent_Declare(
         spdlog
         GIT_REPOSITORY https://github.com/gabime/spdlog.git
-        GIT_TAG v1.13.0
-)
-include_directories(${spdlog_INCLUDE_DIRS})
+        GIT_TAG v1.13.0)
 
 FetchContent_Declare(
   PortAudio
   GIT_REPOSITORY https://github.com/PortAudio/portaudio.git
   GIT_TAG        v19.7.0)
-include_directories(${PortAudio_SOURCE_DIR}/include)
 
 FetchContent_Declare(
   Catch2
