@@ -10,15 +10,18 @@ class PortAudioClient : public AudioClient {
   public:
     PortAudioClient();
     ~PortAudioClient() override;
-    std::vector<Device> getInputDevices() override;
-    std::vector<Device> getOutputDevices() override;
+    std::vector<Device> getAvailableInputDevices() override;
+    std::vector<Device> getAvailableOutputDevices() override;
+    void startStream() override;
+    void stopStream() override;
     void setCallback(callback_t callback) override;
     void setInputDevice(Device device) override;
     void setOutputDevice(Device device) override;
+    void streamCallback(const std::vector<float>& inputSamples,
+                        std::vector<float>& outputSamples);
+    PaStream* getStream() { return stream_; }
 
   private:
-    void startStream();
-    void stopStream();
     PaStream* stream_ = nullptr;
     PaStreamParameters* inputParamsSelected_ = nullptr;
     PaStreamParameters* outputParamsSelected_ = nullptr;

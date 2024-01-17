@@ -13,6 +13,49 @@ void checkError(PaError errorCode) {
     }
 }
 
+static int period = 0;
+
+static int portAudioCallback(const void* inputBufferVoidPtr,
+                             void* outputBufferVoidPtr,
+                             unsigned long framesPerBuffer,
+                             const PaStreamCallbackTimeInfo* timeInfo,
+                             PaStreamCallbackFlags statusFlags,
+                             void* userData) {
+
+    // PortAudioClient* instance = reinterpret_cast<PortAudioClient*>(userData);
+    // const float* inputBuffer =
+    // reinterpret_cast<const float*>(inputBufferVoidPtr);
+    float* outputBuffer = (float*)outputBufferVoidPtr;
+    // uint nInputs = instance->getInputDevice().inputChannels;
+    // uint nOutputs = instance->getOutputDevice().outputChannels;
+    // spdlog::info("{}: {} inputs", instance->getInputDevice().name, nInputs);
+    // spdlog::info("{}: {} outputs", instance->getOutputDevice().name,
+    // nOutputs); std::vector<float> inputVector(nInputs, 0.0f);
+    // std::vector<float> outputVector(nOutputs, 0.0f);
+    // uint inputPosition = 0;
+    // uint outputPosition = 0;
+    for (uint i = 0; i < framesPerBuffer; ++i) {
+        period++;
+        // float sample = inputBuffer[i * 2 + 1];
+        outputBuffer[i * 2 + 1] = sinf(period * 0.05f);
+        // outputBuffer[i * 2] = period * 0.005f - 0.5f;
+        outputBuffer[i * 2] = 0.0f;
+        // spdlog::info("Sample: {}", sample);
+        // if (nInputs > 0) {
+        // inputVector =
+        // std::vector<float>(inputBuffer + inputPosition,
+        //    inputBuffer + inputPosition + nInputs - 1);
+        // inputPosition += nInputs;
+        // }
+        // instance->streamCallback(inputVector, outputVector);
+        // if (nOutputs > 0) {
+        // std::copy(outputVector.begin(), outputVector.end(),
+        //   outputBuffer + outputPosition);
+        // }
+    }
+    return paContinue;
+}
+
 Device getDeviceAt(uint index) {
     const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(index);
     Device device;
@@ -85,11 +128,11 @@ PortAudioClient::~PortAudioClient() {
     checkError(err);
 }
 
-std::vector<Device> PortAudioClient::getInputDevices() {
+std::vector<Device> PortAudioClient::getAvailableInputDevices() {
     return getAvailableDevices(/*is_input=*/true);
 }
 
-std::vector<Device> PortAudioClient::getOutputDevices() {
+std::vector<Device> PortAudioClient::getAvailableOutputDevices() {
     return getAvailableDevices(/*is_input=*/false);
 }
 
@@ -105,8 +148,6 @@ void PortAudioClient::setInputDevice(Device device) {
         inputParams_.hostApiSpecificStreamInfo = nullptr;
         inputParamsSelected_ = &inputParams_;
     }
-    stopStream();
-    startStream();
 }
 
 void PortAudioClient::setOutputDevice(Device device) {
@@ -121,16 +162,10 @@ void PortAudioClient::setOutputDevice(Device device) {
         outputParams_.hostApiSpecificStreamInfo = nullptr;
         outputParamsSelected_ = &outputParams_;
     }
-    stopStream();
-    startStream();
 }
 
-static int patestCallback(const void* inputBuffer, void* outputBuffer,
-                          unsigned long framesPerBuffer,
-                          const PaStreamCallbackTimeInfo* timeInfo,
-                          PaStreamCallbackFlags statusFlags, void* userData) {
-    return 0;
-}
+void PortAudioClient::streamCallback(const std::vector<float>& inputSamples,
+                                     std::vector<float>& outputSamples) {}
 
 void PortAudioClient::startStream() {
     if (isStreamRunning_ || // Stream is already started or no device selected
@@ -142,7 +177,7 @@ void PortAudioClient::startStream() {
                  getOutputDevice().name);
     PaError e = Pa_OpenStream(
         &stream_, inputParamsSelected_, outputParamsSelected_, getSampleRate(),
-        paFramesPerBufferUnspecified, 0, patestCallback, nullptr);
+        paFramesPerBufferUnspecified, paNoFlag, portAudioCallback, this);
     checkError(e);
     e = Pa_StartStream(stream_);
     checkError(e);
@@ -154,7 +189,7 @@ void PortAudioClient::stopStream() {
         return;
     }
     isStreamRunning_ = false;
-    PaError e = Pa_StopStream(stream_);
+    PaError e = Pa_AbortStream(stream_);
     checkError(e);
     e = Pa_CloseStream(stream_);
     checkError(e);

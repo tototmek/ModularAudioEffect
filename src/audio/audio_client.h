@@ -28,8 +28,10 @@ using callback_t =
 class AudioClient {
   public:
     virtual ~AudioClient(){};
-    virtual std::vector<Device> getInputDevices() = 0;
-    virtual std::vector<Device> getOutputDevices() = 0;
+    virtual std::vector<Device> getAvailableInputDevices() = 0;
+    virtual std::vector<Device> getAvailableOutputDevices() = 0;
+    virtual void startStream() = 0;
+    virtual void stopStream() = 0;
     virtual void setCallback(callback_t callback) = 0;
     virtual void setInputDevice(Device device) { inputDevice_ = device; }
     virtual void setOutputDevice(Device device) { outputDevice_ = device; }

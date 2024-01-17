@@ -5,7 +5,7 @@
 
 int main() {
     audio::PortAudioClient client;
-    auto inputDevices = client.getInputDevices();
+    auto inputDevices = client.getAvailableInputDevices();
     spdlog::info("Available input devices:");
     for (const auto& device : inputDevices) {
         spdlog::info("{}. {:<50}\tChannels: {} in, {} out"
@@ -14,7 +14,7 @@ int main() {
                      device.outputChannels,
                      fmt::join(device.sampleRates, ", "));
     }
-    auto outputDevices = client.getOutputDevices();
+    auto outputDevices = client.getAvailableOutputDevices();
     spdlog::info("Available output devices:");
     for (const auto& device : outputDevices) {
         spdlog::info("{}. {:<50}\tChannels: {} in, {} out\t"
@@ -23,7 +23,9 @@ int main() {
                      device.outputChannels,
                      fmt::join(device.sampleRates, ", "));
     }
-    client.setInputDevice(inputDevices[3]);
-    client.setOutputDevice(outputDevices[8]);
-    Pa_Sleep(10000);
+    client.setOutputDevice(outputDevices[10]);
+    // client.setInputDevice(inputDevices[3]);
+    client.stopStream();
+    client.startStream();
+    Pa_Sleep(5000);
 }
