@@ -6,6 +6,8 @@
 
 namespace audio {
 
+constexpr uint kMaxChannels = 2;
+
 class PortAudioClient : public AudioClient {
   public:
     PortAudioClient();
@@ -15,19 +17,17 @@ class PortAudioClient : public AudioClient {
     void startStream() override;
     void stopStream() override;
     void setCallback(callback_t callback) override;
-    void setInputDevice(Device device) override;
-    void setOutputDevice(Device device) override;
     void streamCallback(const std::vector<float>& inputSamples,
                         std::vector<float>& outputSamples);
+    uint nInputChannels() { return nInputChannels_; }
+    uint nOutputChannels() { return nOutputChannels_; }
     PaStream* getStream() { return stream_; }
 
   private:
     PaStream* stream_ = nullptr;
-    PaStreamParameters* inputParamsSelected_ = nullptr;
-    PaStreamParameters* outputParamsSelected_ = nullptr;
-    PaStreamParameters inputParams_;
-    PaStreamParameters outputParams_;
     bool isStreamRunning_ = false;
+    uint nInputChannels_ = 0;
+    uint nOutputChannels_ = 0;
 };
 
 } // namespace audio

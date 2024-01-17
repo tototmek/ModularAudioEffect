@@ -13,47 +13,44 @@ void checkError(PaError errorCode) {
     }
 }
 
-static int period = 0;
-
-static int portAudioCallback(const void* inputBufferVoidPtr,
-                             void* outputBufferVoidPtr,
-                             unsigned long framesPerBuffer,
-                             const PaStreamCallbackTimeInfo* timeInfo,
-                             PaStreamCallbackFlags statusFlags,
-                             void* userData) {
-
-    // PortAudioClient* instance = reinterpret_cast<PortAudioClient*>(userData);
-    // const float* inputBuffer =
-    // reinterpret_cast<const float*>(inputBufferVoidPtr);
-    float* outputBuffer = (float*)outputBufferVoidPtr;
-    // uint nInputs = instance->getInputDevice().inputChannels;
-    // uint nOutputs = instance->getOutputDevice().outputChannels;
-    // spdlog::info("{}: {} inputs", instance->getInputDevice().name, nInputs);
-    // spdlog::info("{}: {} outputs", instance->getOutputDevice().name,
-    // nOutputs); std::vector<float> inputVector(nInputs, 0.0f);
-    // std::vector<float> outputVector(nOutputs, 0.0f);
-    // uint inputPosition = 0;
-    // uint outputPosition = 0;
-    for (uint i = 0; i < framesPerBuffer; ++i) {
-        period++;
-        // float sample = inputBuffer[i * 2 + 1];
-        outputBuffer[i * 2 + 1] = sinf(period * 0.05f);
-        // outputBuffer[i * 2] = period * 0.005f - 0.5f;
-        outputBuffer[i * 2] = 0.0f;
-        // spdlog::info("Sample: {}", sample);
-        // if (nInputs > 0) {
-        // inputVector =
-        // std::vector<float>(inputBuffer + inputPosition,
-        //    inputBuffer + inputPosition + nInputs - 1);
-        // inputPosition += nInputs;
-        // }
-        // instance->streamCallback(inputVector, outputVector);
-        // if (nOutputs > 0) {
-        // std::copy(outputVector.begin(), outputVector.end(),
-        //   outputBuffer + outputPosition);
-        // }
+float CubicAmplifier(float input) {
+    float output, temp;
+    if (input < 0.0) {
+        temp = input + 1.0f;
+        output = (temp * temp * temp) - 1.0f;
+    } else {
+        temp = input - 1.0f;
+        output = (temp * temp * temp) + 1.0f;
     }
-    return paContinue;
+
+    return output;
+}
+#define FUZZ(x) CubicAmplifier(CubicAmplifier(CubicAmplifier(x)))
+static int patestCallback(const void* inputBuffer, void* outputBuffer,
+                          unsigned long framesPerBuffer,
+                          const PaStreamCallbackTimeInfo* timeInfo,
+                          PaStreamCallbackFlags statusFlags, void* userData) {
+    /* Cast data passed through stream to our structure. */
+    const float* in = (const float*)inputBuffer;
+    float* out = (float*)outputBuffer;
+    PortAudioClient* client = reinterpret_cast<PortAudioClient*>(userData);
+    uint inputChannels = client->nInputChannels();
+    uint outputChannels = client->nOutputChannels();
+    if (outputChannels == 0) {
+        return 0;
+    }
+    if (inputChannels == 0) {
+        std::fill(out, out + framesPerBuffer, 0.0f);
+        return 0;
+    }
+    unsigned int i;
+    for (i = 0; i < framesPerBuffer; i++) {
+        in++;
+        float sample = FUZZ(*in++);
+        out[2 * i] = sample;
+        out[2 * i + 1] = sample;
+    }
+    return 0;
 }
 
 Device getDeviceAt(uint index) {
@@ -61,10 +58,10 @@ Device getDeviceAt(uint index) {
     Device device;
     device.index = index;
     device.name = std::string(deviceInfo->name);
-    device.inputChannels = deviceInfo->maxInputChannels;
-    device.outputChannels = deviceInfo->maxOutputChannels;
-    device.inputLatency = deviceInfo->defaultLowInputLatency;
-    device.outputLatency = deviceInfo->defaultLowOutputLatency;
+    device.inputChannels =
+        std::min(uint(deviceInfo->maxInputChannels), kMaxChannels);
+    device.outputChannels =
+        std::min(uint(deviceInfo->maxOutputChannels), kMaxChannels);
     device.sampleRates = {};
     return device;
 }
@@ -77,13 +74,12 @@ void updateDeviceSamplerates(Device& device, bool isInput) {
         params.device = device.index;
         params.hostApiSpecificStreamInfo = nullptr;
         params.sampleFormat = paFloat32;
+        params.suggestedLatency = 0;
         if (isInput) {
             params.channelCount = device.inputChannels;
-            params.suggestedLatency = device.inputLatency;
             result = Pa_IsFormatSupported(&params, nullptr, samplerate);
         } else {
             params.channelCount = device.outputChannels;
-            params.suggestedLatency = device.outputLatency;
             result = Pa_IsFormatSupported(nullptr, &params, samplerate);
         }
         if (result == paFormatIsSupported) {
@@ -111,6 +107,26 @@ std::vector<Device> getAvailableDevices(bool isInput) {
     return devices;
 }
 
+PaStreamParameters* getDeviceStreamParameters(Device device, bool isInput) {
+    if (device.index == -1) {
+        return nullptr;
+    }
+    PaStreamParameters* params = new PaStreamParameters;
+    params->device = device.index;
+    if (isInput) {
+        params->channelCount = device.inputChannels;
+        params->suggestedLatency =
+            Pa_GetDeviceInfo(device.index)->defaultLowInputLatency;
+    } else {
+        params->channelCount = device.outputChannels;
+        params->suggestedLatency =
+            Pa_GetDeviceInfo(device.index)->defaultLowOutputLatency;
+    }
+    params->sampleFormat = paFloat32;
+    params->hostApiSpecificStreamInfo = nullptr;
+    return params;
+}
+
 } // namespace
 
 PortAudioClient::PortAudioClient() {
@@ -136,48 +152,39 @@ std::vector<Device> PortAudioClient::getAvailableOutputDevices() {
     return getAvailableDevices(/*is_input=*/false);
 }
 
-void PortAudioClient::setInputDevice(Device device) {
-    AudioClient::setInputDevice(device);
-    if (device.index == -1) { // "No device" option selected
-        inputParamsSelected_ = nullptr;
-    } else {
-        inputParams_.device = device.index;
-        inputParams_.channelCount = device.inputChannels;
-        inputParams_.suggestedLatency = device.inputLatency;
-        inputParams_.sampleFormat = paFloat32;
-        inputParams_.hostApiSpecificStreamInfo = nullptr;
-        inputParamsSelected_ = &inputParams_;
-    }
-}
-
-void PortAudioClient::setOutputDevice(Device device) {
-    AudioClient::setOutputDevice(device);
-    if (device.index == -1) { // "No device" option selected
-        outputParamsSelected_ = nullptr;
-    } else {
-        outputParams_.device = device.index;
-        outputParams_.channelCount = device.outputChannels;
-        outputParams_.suggestedLatency = device.outputLatency;
-        outputParams_.sampleFormat = paFloat32;
-        outputParams_.hostApiSpecificStreamInfo = nullptr;
-        outputParamsSelected_ = &outputParams_;
-    }
-}
-
 void PortAudioClient::streamCallback(const std::vector<float>& inputSamples,
                                      std::vector<float>& outputSamples) {}
 
 void PortAudioClient::startStream() {
-    if (isStreamRunning_ || // Stream is already started or no device selected
-        (inputParamsSelected_ == nullptr && outputParamsSelected_ == nullptr)) {
+    if (isStreamRunning_) {
+        spdlog::warn("Cannot start stream: Stream already running");
         return;
     }
-    spdlog::info("Starting stream: Sample rate: {} Hz, Input: {}, Output:{}",
-                 getSampleRate(), getInputDevice().name,
-                 getOutputDevice().name);
-    PaError e = Pa_OpenStream(
-        &stream_, inputParamsSelected_, outputParamsSelected_, getSampleRate(),
-        paFramesPerBufferUnspecified, paNoFlag, portAudioCallback, this);
+    if (getInputDevice().index == -1 && getOutputDevice().index == -1) {
+        spdlog::warn("Cannot start stream: No device selected");
+        return;
+    }
+    auto inputParams = getDeviceStreamParameters(getInputDevice(), true);
+    auto outputParams = getDeviceStreamParameters(getOutputDevice(), false);
+    spdlog::info(
+        "Starting stream: Sample rate: {} Hz, Input: {}. {}, Output: {}. {}",
+        getSampleRate(), getInputDevice().index, getInputDevice().name,
+        getOutputDevice().index, getOutputDevice().name);
+    PaError e = Pa_OpenStream(&stream_, inputParams, outputParams,
+                              getSampleRate(), paFramesPerBufferUnspecified,
+                              paNoFlag, patestCallback, this);
+    if (inputParams != nullptr) {
+        nInputChannels_ = inputParams->channelCount;
+        delete inputParams;
+    } else {
+        nInputChannels_ = 0;
+    }
+    if (outputParams != nullptr) {
+        nOutputChannels_ = outputParams->channelCount;
+        delete outputParams;
+    } else {
+        nOutputChannels_ = 0;
+    }
     checkError(e);
     e = Pa_StartStream(stream_);
     checkError(e);
@@ -186,6 +193,7 @@ void PortAudioClient::startStream() {
 
 void PortAudioClient::stopStream() {
     if (!isStreamRunning_) {
+        spdlog::warn("Cannot stop stream: Stream not running");
         return;
     }
     isStreamRunning_ = false;

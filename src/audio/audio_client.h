@@ -17,8 +17,6 @@ struct Device {
     std::string name = "No device";
     uint inputChannels = 0;
     uint outputChannels = 0;
-    uint inputLatency = 0;
-    uint outputLatency = 0;
     std::vector<double> sampleRates = {};
 };
 

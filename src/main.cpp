@@ -2,11 +2,10 @@
 #include <memory>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
-typedef struct {
-    float left_phase;
-    float right_phase;
-} paTestData;
-static paTestData data;
+
+#define MAIN2
+
+#ifdef MAIN1
 /* This routine will be called by the PortAudio engine when audio is needed.
  * It may called at interrupt level on some machines so don't do anything
  * that could mess up the system like calling malloc() or free().
@@ -30,28 +29,15 @@ static int patestCallback(const void* inputBuffer, void* outputBuffer,
                           const PaStreamCallbackTimeInfo* timeInfo,
                           PaStreamCallbackFlags statusFlags, void* userData) {
     /* Cast data passed through stream to our structure. */
-    paTestData* data = (paTestData*)userData;
     const float* in = (const float*)inputBuffer;
     float* out = (float*)outputBuffer;
     unsigned int i;
 
     for (i = 0; i < framesPerBuffer; i++) {
         in++;
-        // spdlog::info("{}", *in);
         float sample = FUZZ(*in++);
         out[2 * i] = sample; /* left */
-        // out[2 * i] = 0.0f;
-        // out[2 * i + 1] = data->right_phase; /* right */
         out[2 * i + 1] = sample;
-        /* Generate simple sawtooth phaser that ranges between -1.0 and 1.0. */
-        data->left_phase += 0.01f;
-        /* When signal reaches top, drop back down. */
-        if (data->left_phase >= 1.0f)
-            data->left_phase -= 2.0f;
-        /* higher pitch so we can distinguish left and right. */
-        data->right_phase += 0.03f;
-        if (data->right_phase >= 1.0f)
-            data->right_phase -= 2.0f;
     }
     return 0;
 }
@@ -69,21 +55,7 @@ int main() {
     if (err != paNoError)
         handleError(err);
 
-    int numDevices = Pa_GetDeviceCount();
-    if (numDevices < 0) {
-        spdlog::error("Error: Pa_GetDeviceCount failed.");
-        Pa_Terminate();
-        return 1;
-    }
-
-    spdlog::info("Number of audio devices: {}", numDevices);
-
-    for (int i = 0; i < numDevices; ++i) {
-        const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
-        spdlog::info("Device {}: {}", i, deviceInfo->name);
-    }
-
-    uint output_index = 10;
+    uint output_index = 7;
     PaStreamParameters outputParams;
     outputParams.device = output_index;
     outputParams.channelCount = 2;
@@ -104,7 +76,7 @@ int main() {
     PaStream* stream;
     err = Pa_OpenStream(&stream, &inputParams, &outputParams, 44100.0,
                         paFramesPerBufferUnspecified, paNoFlag, patestCallback,
-                        &data);
+                        nullptr);
     if (err != paNoError)
         handleError(err);
 
@@ -112,7 +84,7 @@ int main() {
     if (err != paNoError)
         handleError(err);
 
-    Pa_Sleep(50000);
+    Pa_Sleep(5000);
     err = Pa_StopStream(stream);
     if (err != paNoError)
         handleError(err);
@@ -127,3 +99,41 @@ int main() {
 
     return 0;
 }
+#endif
+#ifdef MAIN2
+
+int main() {
+    audio::PortAudioClient client;
+    auto inputDevices = client.getAvailableInputDevices();
+    auto outputDevices = client.getAvailableOutputDevices();
+    uint i = 0;
+    spdlog::info("Available input devices:");
+    for (const auto& device : inputDevices) {
+        spdlog::info("{:>3}. {}", i++, device.name);
+    }
+    i = 0;
+    spdlog::info("Available output devices:");
+    for (const auto& device : outputDevices) {
+        spdlog::info("{:>3}. {}", i++, device.name);
+    }
+    client.setOutputDevice(outputDevices[10]);
+    client.startStream();
+    Pa_Sleep(3000);
+    client.stopStream();
+    client.setInputDevice(inputDevices[3]);
+    client.setOutputDevice(outputDevices[10]);
+    client.startStream();
+    Pa_Sleep(3000);
+    client.setOutputDevice(outputDevices[8]);
+    Pa_Sleep(1000);
+    client.stopStream();
+    client.startStream();
+    Pa_Sleep(3000);
+    client.setOutputDevice(outputDevices[0]);
+    Pa_Sleep(1000);
+    client.stopStream();
+    client.startStream();
+    Pa_Sleep(1000);
+}
+
+#endif
