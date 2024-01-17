@@ -13,24 +13,12 @@ void checkError(PaError errorCode) {
     }
 }
 
-float CubicAmplifier(float input) {
-    float output, temp;
-    if (input < 0.0) {
-        temp = input + 1.0f;
-        output = (temp * temp * temp) - 1.0f;
-    } else {
-        temp = input - 1.0f;
-        output = (temp * temp * temp) + 1.0f;
-    }
-
-    return output;
-}
-#define FUZZ(x) CubicAmplifier(CubicAmplifier(CubicAmplifier(x)))
 static int patestCallback(const void* inputBuffer, void* outputBuffer,
                           unsigned long framesPerBuffer,
                           const PaStreamCallbackTimeInfo* timeInfo,
                           PaStreamCallbackFlags statusFlags, void* userData) {
-    /* Cast data passed through stream to our structure. */
+    (void)timeInfo;
+    (void)statusFlags;
     const float* in = (const float*)inputBuffer;
     float* out = (float*)outputBuffer;
     PortAudioClient* client = reinterpret_cast<PortAudioClient*>(userData);
@@ -43,17 +31,16 @@ static int patestCallback(const void* inputBuffer, void* outputBuffer,
         std::fill(out, out + framesPerBuffer, 0.0f);
         return 0;
     }
-    unsigned int i;
-    for (i = 0; i < framesPerBuffer; i++) {
+    for (uint i = 0; i < framesPerBuffer; i++) {
         in++;
-        float sample = FUZZ(*in++);
+        float sample = *in++;
         out[2 * i] = sample;
         out[2 * i + 1] = sample;
     }
     return 0;
 }
 
-Device getDeviceAt(uint index) {
+Device getDeviceAt(int index) {
     const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(index);
     Device device;
     device.index = index;
@@ -76,10 +63,10 @@ void updateDeviceSamplerates(Device& device, bool isInput) {
         params.sampleFormat = paFloat32;
         params.suggestedLatency = 0;
         if (isInput) {
-            params.channelCount = device.inputChannels;
+            params.channelCount = int(device.inputChannels);
             result = Pa_IsFormatSupported(&params, nullptr, samplerate);
         } else {
-            params.channelCount = device.outputChannels;
+            params.channelCount = int(device.outputChannels);
             result = Pa_IsFormatSupported(nullptr, &params, samplerate);
         }
         if (result == paFormatIsSupported) {
@@ -96,7 +83,7 @@ std::vector<Device> getAvailableDevices(bool isInput) {
     std::vector<Device> devices;
     devices.emplace_back(Device{});
     for (uint i = 0; i < nDevices; ++i) {
-        Device device = getDeviceAt(i);
+        Device device = getDeviceAt(int(i));
         if ((device.inputChannels == 0 && isInput) ||
             (device.outputChannels == 0 && !isInput)) {
             continue;
@@ -114,11 +101,11 @@ PaStreamParameters* getDeviceStreamParameters(Device device, bool isInput) {
     PaStreamParameters* params = new PaStreamParameters;
     params->device = device.index;
     if (isInput) {
-        params->channelCount = device.inputChannels;
+        params->channelCount = int(device.inputChannels);
         params->suggestedLatency =
             Pa_GetDeviceInfo(device.index)->defaultLowInputLatency;
     } else {
-        params->channelCount = device.outputChannels;
+        params->channelCount = int(device.outputChannels);
         params->suggestedLatency =
             Pa_GetDeviceInfo(device.index)->defaultLowOutputLatency;
     }
@@ -164,8 +151,8 @@ void PortAudioClient::startStream() {
         spdlog::warn("Cannot start stream: No device selected");
         return;
     }
-    auto inputParams = getDeviceStreamParameters(getInputDevice(), true);
-    auto outputParams = getDeviceStreamParameters(getOutputDevice(), false);
+    auto* inputParams = getDeviceStreamParameters(getInputDevice(), true);
+    auto* outputParams = getDeviceStreamParameters(getOutputDevice(), false);
     spdlog::info(
         "Starting stream: Sample rate: {} Hz, Input: {}. {}, Output: {}. {}",
         getSampleRate(), getInputDevice().index, getInputDevice().name,

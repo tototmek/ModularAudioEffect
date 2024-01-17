@@ -7,7 +7,7 @@ NC='\033[0m'
 
 echo "Files to check:"
 # changed_files=`git --no-pager diff origin/master --stat --color=always | grep -v dependencies/`
-changed_files=$(find . | grep -e "src/.*\\.cpp$")
+changed_files=$(find . -type f -path "./src/*.cpp")
 echo "$changed_files"
 for file in $changed_files;
 do
