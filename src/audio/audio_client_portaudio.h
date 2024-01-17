@@ -12,12 +12,19 @@ class PortAudioClient : public AudioClient {
     ~PortAudioClient() override;
     std::vector<Device> getInputDevices() override;
     std::vector<Device> getOutputDevices() override;
-    void startStream(StreamParams input, StreamParams output) override;
-    void stopStream() override;
     void setCallback(callback_t callback) override;
+    void setInputDevice(Device device) override;
+    void setOutputDevice(Device device) override;
 
   private:
-    bool isStreamOn_ = false;
+    void startStream();
+    void stopStream();
+    PaStream* stream_ = nullptr;
+    PaStreamParameters* inputParamsSelected_ = nullptr;
+    PaStreamParameters* outputParamsSelected_ = nullptr;
+    PaStreamParameters inputParams_;
+    PaStreamParameters outputParams_;
+    bool isStreamRunning_ = false;
 };
 
 } // namespace audio

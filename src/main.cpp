@@ -23,4 +23,7 @@ int main() {
                      device.outputChannels,
                      fmt::join(device.sampleRates, ", "));
     }
+    client.setInputDevice(inputDevices[3]);
+    client.setOutputDevice(outputDevices[8]);
+    Pa_Sleep(10000);
 }

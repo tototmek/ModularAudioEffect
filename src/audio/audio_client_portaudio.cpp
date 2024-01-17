@@ -4,9 +4,6 @@
 
 namespace audio {
 
-static const std::vector<double> kStandardSamplerates{
-    22050.0, 24000.0, 44100.0, 48000.0, 88200.0, 96000.0, 176400.0, 192000.0};
-
 namespace {
 
 void checkError(PaError errorCode) {
@@ -58,6 +55,7 @@ std::vector<Device> getAvailableDevices(bool isInput) {
         throw std::runtime_error("PortAudio error: Pa_GetDeviceCount failed.");
     }
     std::vector<Device> devices;
+    devices.emplace_back(Device{});
     for (uint i = 0; i < nDevices; ++i) {
         Device device = getDeviceAt(i);
         if ((device.inputChannels == 0 && isInput) ||
@@ -81,10 +79,8 @@ PortAudioClient::PortAudioClient() {
 }
 
 PortAudioClient::~PortAudioClient() {
+    stopStream();
     spdlog::info("Deinitializing PortAudio...");
-    if (isStreamOn_) {
-        stopStream();
-    }
     PaError err = Pa_Terminate();
     checkError(err);
 }
@@ -97,11 +93,72 @@ std::vector<Device> PortAudioClient::getOutputDevices() {
     return getAvailableDevices(/*is_input=*/false);
 }
 
-void PortAudioClient::startStream(StreamParams input, StreamParams output) {
-    isStreamOn_ = true;
+void PortAudioClient::setInputDevice(Device device) {
+    AudioClient::setInputDevice(device);
+    if (device.index == -1) { // "No device" option selected
+        inputParamsSelected_ = nullptr;
+    } else {
+        inputParams_.device = device.index;
+        inputParams_.channelCount = device.inputChannels;
+        inputParams_.suggestedLatency = device.inputLatency;
+        inputParams_.sampleFormat = paFloat32;
+        inputParams_.hostApiSpecificStreamInfo = nullptr;
+        inputParamsSelected_ = &inputParams_;
+    }
+    stopStream();
+    startStream();
 }
 
-void PortAudioClient::stopStream() { isTreamOn_ = false; }
+void PortAudioClient::setOutputDevice(Device device) {
+    AudioClient::setOutputDevice(device);
+    if (device.index == -1) { // "No device" option selected
+        outputParamsSelected_ = nullptr;
+    } else {
+        outputParams_.device = device.index;
+        outputParams_.channelCount = device.outputChannels;
+        outputParams_.suggestedLatency = device.outputLatency;
+        outputParams_.sampleFormat = paFloat32;
+        outputParams_.hostApiSpecificStreamInfo = nullptr;
+        outputParamsSelected_ = &outputParams_;
+    }
+    stopStream();
+    startStream();
+}
+
+static int patestCallback(const void* inputBuffer, void* outputBuffer,
+                          unsigned long framesPerBuffer,
+                          const PaStreamCallbackTimeInfo* timeInfo,
+                          PaStreamCallbackFlags statusFlags, void* userData) {
+    return 0;
+}
+
+void PortAudioClient::startStream() {
+    if (isStreamRunning_ || // Stream is already started or no device selected
+        (inputParamsSelected_ == nullptr && outputParamsSelected_ == nullptr)) {
+        return;
+    }
+    spdlog::info("Starting stream: Sample rate: {} Hz, Input: {}, Output:{}",
+                 getSampleRate(), getInputDevice().name,
+                 getOutputDevice().name);
+    PaError e = Pa_OpenStream(
+        &stream_, inputParamsSelected_, outputParamsSelected_, getSampleRate(),
+        paFramesPerBufferUnspecified, 0, patestCallback, nullptr);
+    checkError(e);
+    e = Pa_StartStream(stream_);
+    checkError(e);
+    isStreamRunning_ = true;
+}
+
+void PortAudioClient::stopStream() {
+    if (!isStreamRunning_) {
+        return;
+    }
+    isStreamRunning_ = false;
+    PaError e = Pa_StopStream(stream_);
+    checkError(e);
+    e = Pa_CloseStream(stream_);
+    checkError(e);
+}
 
 void PortAudioClient::setCallback(callback_t callback) {}
 
