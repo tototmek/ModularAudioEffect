@@ -1,15 +1,8 @@
-set(MODULE_NAME blocks)
+set(MODULE_NAME audio)
 set(LIBRARY_NAME "${MODULE_NAME}")
 
-include_directories(processes/)
-
 set(MODULE_SRC 
-block.cpp
-block_system.cpp
-evaluation_sequence.cpp
-process_block.cpp
-processes/delay.cpp
-processes/gain.cpp
+main.cpp
 )
 
 add_library(${LIBRARY_NAME} STATIC ${MODULE_SRC})
