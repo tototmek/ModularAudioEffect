@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.13.3)
 
 project(ModularAudioEffect VERSION 1.0.0 LANGUAGES CXX C)
 
-set(CMAKE_CXX_STANDARD 20)
+cmake_policy(SET CMP0024 OLD)
+
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_C_STANDARD 99)
@@ -18,6 +20,8 @@ include_directories(${CMAKE_BINARY_DIR})
 include(cmake/fetch_dependencies.cmake)
 find_package(spdlog REQUIRED)
 
+set(portaudio_DIR ${CMAKE_BINARY_DIR}/cmake/portaudio/)
+
 # add submodules
 add_subdirectory(src/blocks)
 add_subdirectory(src/audio)
@@ -30,6 +34,7 @@ endif()
 add_executable(${PROJECT_NAME} src/main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     spdlog::spdlog
+    portaudio
     ${PROJECT_LIBS}
 )
 
