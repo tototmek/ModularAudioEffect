@@ -13,31 +13,32 @@ void checkError(PaError errorCode) {
     }
 }
 
-static int patestCallback(const void* inputBuffer, void* outputBuffer,
-                          unsigned long framesPerBuffer,
-                          const PaStreamCallbackTimeInfo* timeInfo,
-                          PaStreamCallbackFlags statusFlags, void* userData) {
+static int portAudioCallback(const void* inputBuffer, void* outputBuffer,
+                             unsigned long framesPerBuffer,
+                             const PaStreamCallbackTimeInfo* timeInfo,
+                             PaStreamCallbackFlags statusFlags,
+                             void* userData) {
+    static std::vector<float> inputVector, outputVector;
     (void)timeInfo;
     (void)statusFlags;
     const float* in = (const float*)inputBuffer;
     float* out = (float*)outputBuffer;
     PortAudioClient* client = reinterpret_cast<PortAudioClient*>(userData);
-    uint inputChannels = client->nInputChannels();
-    uint outputChannels = client->nOutputChannels();
-    if (outputChannels == 0) {
-        return 0;
+    uint nInputs = client->getInputDevice().inputChannels;
+    uint nOutputs = client->getOutputDevice().outputChannels;
+    inputVector.resize(nInputs);
+    outputVector.resize(nOutputs);
+    uint inIndex = 0, outIndex = 0, i = 0, j = 0, k = 0;
+    for (i = 0; i < framesPerBuffer; ++i) {
+        for (j = 0; j < nInputs; ++j) {
+            inputVector[j] = in[inIndex++];
+        }
+        client->callCallback(inputVector, outputVector);
+        for (k = 0; k < nOutputs; ++k) {
+            out[outIndex++] = outputVector[k];
+        }
     }
-    if (inputChannels == 0) {
-        std::fill(out, out + framesPerBuffer, 0.0f);
-        return 0;
-    }
-    for (uint i = 0; i < framesPerBuffer; i++) {
-        in++;
-        float sample = *in++;
-        out[2 * i] = sample;
-        out[2 * i + 1] = sample;
-    }
-    return 0;
+    return paContinue;
 }
 
 Device getDeviceAt(int index) {
@@ -139,8 +140,16 @@ std::vector<Device> PortAudioClient::getAvailableOutputDevices() {
     return getAvailableDevices(/*is_input=*/false);
 }
 
-void PortAudioClient::streamCallback(const std::vector<float>& inputSamples,
-                                     std::vector<float>& outputSamples) {}
+void PortAudioClient::callCallback(const std::vector<float>& input,
+                                   std::vector<float>& output) {
+    if (callback_ == nullptr) {
+        spdlog::warn("PortAudio callback is an empty function "
+                     "(PortAudioClient::callback_ = nullptr)");
+        return;
+    }
+
+    callback_(input, output);
+}
 
 void PortAudioClient::startStream() {
     if (isStreamRunning_) {
@@ -153,13 +162,13 @@ void PortAudioClient::startStream() {
     }
     auto* inputParams = getDeviceStreamParameters(getInputDevice(), true);
     auto* outputParams = getDeviceStreamParameters(getOutputDevice(), false);
-    spdlog::info(
-        "Starting stream: Sample rate: {} Hz, Input: {}. {}, Output: {}. {}",
-        getSampleRate(), getInputDevice().index, getInputDevice().name,
-        getOutputDevice().index, getOutputDevice().name);
+    spdlog::info("Starting stream: Sample rate: {} Hz, Input: {}. {}, "
+                 "Output: {}. {}",
+                 getSampleRate(), getInputDevice().index, getInputDevice().name,
+                 getOutputDevice().index, getOutputDevice().name);
     PaError e = Pa_OpenStream(&stream_, inputParams, outputParams,
                               getSampleRate(), paFramesPerBufferUnspecified,
-                              paNoFlag, patestCallback, this);
+                              paNoFlag, portAudioCallback, this);
     if (inputParams != nullptr) {
         nInputChannels_ = inputParams->channelCount;
         delete inputParams;
@@ -190,6 +199,6 @@ void PortAudioClient::stopStream() {
     checkError(e);
 }
 
-void PortAudioClient::setCallback(callback_t callback) {}
+void PortAudioClient::setCallback(callback_t callback) { callback_ = callback; }
 
 } // namespace audio

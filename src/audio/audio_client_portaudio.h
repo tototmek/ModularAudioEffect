@@ -17,13 +17,13 @@ class PortAudioClient : public AudioClient {
     void startStream() override;
     void stopStream() override;
     void setCallback(callback_t callback) override;
-    void streamCallback(const std::vector<float>& inputSamples,
-                        std::vector<float>& outputSamples);
     uint nInputChannels() { return nInputChannels_; }
     uint nOutputChannels() { return nOutputChannels_; }
-    PaStream* getStream() { return stream_; }
+    void callCallback(const std::vector<float>& input,
+                      std::vector<float>& output);
 
   private:
+    callback_t callback_;
     PaStream* stream_ = nullptr;
     bool isStreamRunning_ = false;
     uint nInputChannels_ = 0;
