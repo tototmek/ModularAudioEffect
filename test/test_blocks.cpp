@@ -4,14 +4,14 @@
 
 #include <../src/blocks/blocks.h>
 
-TEST_CASE("Always pass") { ; }
+TEST_CASE("Always pass", "[blocks]") { ; }
 
-TEST_CASE("Construct process block") {
+TEST_CASE("Construct process block", "[blocks]") {
     auto block = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
 }
 
-TEST_CASE("Evaluate process block") {
+TEST_CASE("Evaluate process block", "[blocks]") {
     auto block = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     block->setInput(1.0f);
@@ -19,30 +19,30 @@ TEST_CASE("Evaluate process block") {
     REQUIRE_THAT(block->getOutput(), Catch::Matchers::WithinAbs(1.0f, 1e-4f));
 }
 
-TEST_CASE("Get input out of bounds") {
+TEST_CASE("Get input out of bounds", "[blocks]") {
     auto block = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     REQUIRE_THROWS_AS(block->setInput(1.0f, 1), blocks::base_exception);
 }
 
-TEST_CASE("Get output out of bounds") {
+TEST_CASE("Get output out of bounds", "[blocks]") {
     auto block = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     REQUIRE_THROWS_AS(block->getOutput(1), blocks::base_exception);
 }
 
-TEST_CASE("Construct block system") {
+TEST_CASE("Construct block system", "[blocks]") {
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
 }
 
-TEST_CASE("Add block") {
+TEST_CASE("Add block", "[blocks]") {
     auto block = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
     blockSystem->addBlock(block);
 }
 
-TEST_CASE("Remove block") {
+TEST_CASE("Remove block", "[blocks]") {
     auto block = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
@@ -50,7 +50,7 @@ TEST_CASE("Remove block") {
     blockSystem->removeBlock(block);
 }
 
-TEST_CASE("Add same block twice") {
+TEST_CASE("Add same block twice", "[blocks]") {
     auto block = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
@@ -58,14 +58,14 @@ TEST_CASE("Add same block twice") {
     REQUIRE_THROWS_AS(blockSystem->addBlock(block), blocks::base_exception);
 }
 
-TEST_CASE("Remove non-existent block") {
+TEST_CASE("Remove non-existent block", "[blocks]") {
     auto block = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
     REQUIRE_THROWS_AS(blockSystem->removeBlock(block), blocks::base_exception);
 }
 
-TEST_CASE("hasBlock() method") {
+TEST_CASE("hasBlock() method", "[blocks]") {
     auto block = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
@@ -76,7 +76,7 @@ TEST_CASE("hasBlock() method") {
     REQUIRE(blockSystem->hasBlock(block) == false);
 }
 
-TEST_CASE("hasBlock() method with more blocks") {
+TEST_CASE("hasBlock() method with more blocks", "[blocks]") {
     auto block = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto unusedBlock = std::make_shared<blocks::ProcessBlock>(
@@ -90,7 +90,7 @@ TEST_CASE("hasBlock() method with more blocks") {
     REQUIRE(blockSystem->hasBlock(block) == false);
 }
 
-TEST_CASE("Add connection") {
+TEST_CASE("Add connection", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -105,7 +105,7 @@ TEST_CASE("Add connection") {
     blockSystem->addConnection(connection);
 }
 
-TEST_CASE("hasConnection() method") {
+TEST_CASE("hasConnection() method", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -126,7 +126,7 @@ TEST_CASE("hasConnection() method") {
     REQUIRE(blockSystem->hasConnection(connection) == false);
 }
 
-TEST_CASE("Add connection of blocks not inside block system") {
+TEST_CASE("Add connection of blocks not inside block system", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -140,7 +140,7 @@ TEST_CASE("Add connection of blocks not inside block system") {
                       blocks::base_exception);
 }
 
-TEST_CASE("Add connection from outside") {
+TEST_CASE("Add connection from outside", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -155,7 +155,7 @@ TEST_CASE("Add connection from outside") {
                       blocks::base_exception);
 }
 
-TEST_CASE("Add connection to outside") {
+TEST_CASE("Add connection to outside", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -170,7 +170,7 @@ TEST_CASE("Add connection to outside") {
                       blocks::base_exception);
 }
 
-TEST_CASE("Add connection illegal source port") {
+TEST_CASE("Add connection illegal source port", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -188,7 +188,7 @@ TEST_CASE("Add connection illegal source port") {
                       blocks::base_exception);
 }
 
-TEST_CASE("Add connection illegal target port") {
+TEST_CASE("Add connection illegal target port", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -206,7 +206,7 @@ TEST_CASE("Add connection illegal target port") {
                       blocks::base_exception);
 }
 
-TEST_CASE("Add duplicate connection") {
+TEST_CASE("Add duplicate connection", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -225,7 +225,7 @@ TEST_CASE("Add duplicate connection") {
                       blocks::base_exception);
 }
 
-TEST_CASE("Add connection to already connected target port") {
+TEST_CASE("Add connection to already connected target port", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -248,7 +248,7 @@ TEST_CASE("Add connection to already connected target port") {
                       blocks::base_exception);
 }
 
-TEST_CASE("Add connection from already connected target port") {
+TEST_CASE("Add connection from already connected target port", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -269,7 +269,7 @@ TEST_CASE("Add connection from already connected target port") {
                       blocks::base_exception);
 }
 
-TEST_CASE("Add multiple valid connections") {
+TEST_CASE("Add multiple valid connections", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -290,7 +290,7 @@ TEST_CASE("Add multiple valid connections") {
     blockSystem->addConnection(connection);
 }
 
-TEST_CASE("Remove connection") {
+TEST_CASE("Remove connection", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -306,7 +306,7 @@ TEST_CASE("Remove connection") {
     blockSystem->removeConnection(connection);
 }
 
-TEST_CASE("Remove connection which does not exist") {
+TEST_CASE("Remove connection which does not exist", "[blocks]") {
     auto blockA = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto blockB = std::make_shared<blocks::ProcessBlock>(
@@ -343,7 +343,7 @@ bool compareVectors(const std::vector<uint>& a, const std::vector<uint>& b) {
     return true;
 }
 
-TEST_CASE("Compute evaluation sequence: straight graph") {
+TEST_CASE("Compute evaluation sequence: straight graph", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -368,7 +368,7 @@ TEST_CASE("Compute evaluation sequence: straight graph") {
     REQUIRE(compareVectors(evalSequence, correctEvalSequence));
 }
 
-TEST_CASE("Compute evaluation sequence: graph with cycle") {
+TEST_CASE("Compute evaluation sequence: graph with cycle", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -396,7 +396,7 @@ TEST_CASE("Compute evaluation sequence: graph with cycle") {
     REQUIRE(compareVectors(evalSequence, correctEvalSequence));
 }
 
-TEST_CASE("Add input to block system") {
+TEST_CASE("Add input to block system", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -421,7 +421,7 @@ TEST_CASE("Add input to block system") {
     blockSystem->addInput(port);
 }
 
-TEST_CASE("Add multiple inputs to block system") {
+TEST_CASE("Add multiple inputs to block system", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -442,7 +442,7 @@ TEST_CASE("Add multiple inputs to block system") {
     REQUIRE(blockSystem->getInputSize() == 3);
 }
 
-TEST_CASE("Add input to block system, illegal port") {
+TEST_CASE("Add input to block system, illegal port", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -468,7 +468,7 @@ TEST_CASE("Add input to block system, illegal port") {
     REQUIRE_THROWS_AS(blockSystem->addInput(port), blocks::base_exception);
 }
 
-TEST_CASE("Add input to block system, port already connected") {
+TEST_CASE("Add input to block system, port already connected", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -494,7 +494,7 @@ TEST_CASE("Add input to block system, port already connected") {
     REQUIRE_THROWS_AS(blockSystem->addInput(port), blocks::base_exception);
 }
 
-TEST_CASE("Add output to block system") {
+TEST_CASE("Add output to block system", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -519,7 +519,7 @@ TEST_CASE("Add output to block system") {
     blockSystem->addOutput(port);
 }
 
-TEST_CASE("Add multiple outputs to block system") {
+TEST_CASE("Add multiple outputs to block system", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -540,7 +540,7 @@ TEST_CASE("Add multiple outputs to block system") {
     REQUIRE(blockSystem->getOutputSize() == 3);
 }
 
-TEST_CASE("Add output to block system, illegal port") {
+TEST_CASE("Add output to block system, illegal port", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -566,7 +566,7 @@ TEST_CASE("Add output to block system, illegal port") {
     REQUIRE_THROWS_AS(blockSystem->addOutput(port), blocks::base_exception);
 }
 
-TEST_CASE("Add output to block system, port already connected") {
+TEST_CASE("Add output to block system, port already connected", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -591,7 +591,7 @@ TEST_CASE("Add output to block system, port already connected") {
     REQUIRE_THROWS_AS(blockSystem->addOutput(port), blocks::base_exception);
 }
 
-TEST_CASE("Remove input of block system") {
+TEST_CASE("Remove input of block system", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -617,7 +617,7 @@ TEST_CASE("Remove input of block system") {
     blockSystem->removeInput(port);
 }
 
-TEST_CASE("Remove non-existent input of block system") {
+TEST_CASE("Remove non-existent input of block system", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -644,7 +644,7 @@ TEST_CASE("Remove non-existent input of block system") {
     REQUIRE_THROWS_AS(blockSystem->removeInput(port), blocks::base_exception);
 }
 
-TEST_CASE("Remove output of block system") {
+TEST_CASE("Remove output of block system", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -670,7 +670,7 @@ TEST_CASE("Remove output of block system") {
     blockSystem->removeOutput(port);
 }
 
-TEST_CASE("Remove non-existent output of block system") {
+TEST_CASE("Remove non-existent output of block system", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -697,7 +697,7 @@ TEST_CASE("Remove non-existent output of block system") {
     REQUIRE_THROWS_AS(blockSystem->removeOutput(port), blocks::base_exception);
 }
 
-TEST_CASE("Connect to a port that is already an input") {
+TEST_CASE("Connect to a port that is already an input", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -726,7 +726,7 @@ TEST_CASE("Connect to a port that is already an input") {
                       blocks::base_exception);
 }
 
-TEST_CASE("Connect to a port that is already an output") {
+TEST_CASE("Connect to a port that is already an output", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -755,7 +755,7 @@ TEST_CASE("Connect to a port that is already an output") {
                       blocks::base_exception);
 }
 
-TEST_CASE("Add and remove multiple outputs to block system") {
+TEST_CASE("Add and remove multiple outputs to block system", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -778,7 +778,7 @@ TEST_CASE("Add and remove multiple outputs to block system") {
     REQUIRE(blockSystem->getOutputSize() == 2);
 }
 
-TEST_CASE("Add and remove multiple inputs to block system") {
+TEST_CASE("Add and remove multiple inputs to block system", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(1.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -801,7 +801,7 @@ TEST_CASE("Add and remove multiple inputs to block system") {
     REQUIRE(blockSystem->getInputSize() == 2);
 }
 
-TEST_CASE("Evaluate simple block system") {
+TEST_CASE("Evaluate simple block system", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(2.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -830,7 +830,7 @@ TEST_CASE("Evaluate simple block system") {
                  Catch::Matchers::WithinAbs(64.0f, 1e-4f));
 }
 
-TEST_CASE("Evaluate simple block system removed connection") {
+TEST_CASE("Evaluate simple block system removed connection", "[blocks]") {
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(2.0));
     auto block1 = std::make_shared<blocks::ProcessBlock>(
@@ -860,7 +860,7 @@ TEST_CASE("Evaluate simple block system removed connection") {
                  Catch::Matchers::WithinAbs(0.0f, 1e-4f));
 }
 
-TEST_CASE("Evaluate simple block system removed block") {
+TEST_CASE("Evaluate simple block system removed block", "[blocks]") {
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
     {
         auto block0 = std::make_shared<blocks::ProcessBlock>(
@@ -892,7 +892,8 @@ TEST_CASE("Evaluate simple block system removed block") {
                  Catch::Matchers::WithinAbs(0.0f, 1e-4f));
 }
 
-TEST_CASE("Evaluate simple block system removed block, reconnected") {
+TEST_CASE("Evaluate simple block system removed block, reconnected",
+          "[blocks]") {
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(2.0));
@@ -925,7 +926,7 @@ TEST_CASE("Evaluate simple block system removed block, reconnected") {
                  Catch::Matchers::WithinAbs(16.0f, 1e-4f));
 }
 
-TEST_CASE("Evaluate simple block system removed input") {
+TEST_CASE("Evaluate simple block system removed input", "[blocks]") {
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(2.0));
@@ -956,7 +957,7 @@ TEST_CASE("Evaluate simple block system removed input") {
                  Catch::Matchers::WithinAbs(0.0f, 1e-4f));
 }
 
-TEST_CASE("Evaluate simple block system removed output") {
+TEST_CASE("Evaluate simple block system removed output", "[blocks]") {
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(2.0));
@@ -985,7 +986,7 @@ TEST_CASE("Evaluate simple block system removed output") {
     blockSystem->evaluate();
 }
 
-TEST_CASE("Evaluate simple block system removed input block") {
+TEST_CASE("Evaluate simple block system removed input block", "[blocks]") {
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(2.0));
@@ -1015,7 +1016,7 @@ TEST_CASE("Evaluate simple block system removed input block") {
                  Catch::Matchers::WithinAbs(0.0f, 1e-4f));
 }
 
-TEST_CASE("Evaluate simple block system removed output block") {
+TEST_CASE("Evaluate simple block system removed output block", "[blocks]") {
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(2.0));
@@ -1043,7 +1044,8 @@ TEST_CASE("Evaluate simple block system removed output block") {
     blockSystem->evaluate();
 }
 
-TEST_CASE("Evaluate simple block system removed input block, reconnected") {
+TEST_CASE("Evaluate simple block system removed input block, reconnected",
+          "[blocks]") {
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(2.0));
@@ -1076,7 +1078,8 @@ TEST_CASE("Evaluate simple block system removed input block, reconnected") {
                  Catch::Matchers::WithinAbs(32.0f, 1e-4f));
 }
 
-TEST_CASE("Evaluate simple block system removed output block, reconnected") {
+TEST_CASE("Evaluate simple block system removed output block, reconnected",
+          "[blocks]") {
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(2.0));
@@ -1108,7 +1111,7 @@ TEST_CASE("Evaluate simple block system removed output block, reconnected") {
                  Catch::Matchers::WithinAbs(8.0f, 1e-4f));
 }
 
-TEST_CASE("Reroute connection to another output") {
+TEST_CASE("Reroute connection to another output", "[blocks]") {
     auto blockSystem = std::make_shared<blocks::BlockSystem>();
     auto block0 = std::make_shared<blocks::ProcessBlock>(
         std::make_unique<blocks::Gain>(2.0));
@@ -1140,4 +1143,22 @@ TEST_CASE("Reroute connection to another output") {
                Catch::Matchers::WithinAbs(0.0f, 1e-4f));
     REQUIRE_THAT(blockSystem->getOutput(1),
                  Catch::Matchers::WithinAbs(16.0f, 1e-4f));
+}
+
+TEST_CASE("Adder", "[blocks]") {
+    blocks::Adder adder(3);
+    adder.setInput(1.0f, 0);
+    adder.setInput(1.0f, 1);
+    adder.setInput(1.0f, 2);
+    adder.evaluate();
+    REQUIRE(adder.getOutput() == 3.0f);
+}
+
+TEST_CASE("Splitter", "[blocks]") {
+    blocks::Splitter splitter(3);
+    splitter.setInput(1.0f);
+    splitter.evaluate();
+    CHECK(splitter.getOutput(0) == 1.0f);
+    CHECK(splitter.getOutput(1) == 1.0f);
+    CHECK(splitter.getOutput(2) == 1.0f);
 }
