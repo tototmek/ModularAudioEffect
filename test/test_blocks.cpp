@@ -1162,3 +1162,52 @@ TEST_CASE("Splitter", "[blocks]") {
     CHECK(splitter.getOutput(1) == 1.0f);
     CHECK(splitter.getOutput(2) == 1.0f);
 }
+
+TEST_CASE("Port comparison", "[blocks]") {
+    auto block1 = std::make_shared<blocks::ProcessBlock>(
+        std::make_unique<blocks::Gain>(4.0));
+    auto block2 = std::make_shared<blocks::ProcessBlock>(
+        std::make_unique<blocks::Gain>(8.0));
+    blocks::Port p1, p2;
+    p1.block = block1;
+    p1.port = 0;
+    p2.block = block1;
+    p2.port = 0;
+    CHECK(p1 == p2);
+    p1.block = block1;
+    p1.port = 0;
+    p2.block = block1;
+    p2.port = 1;
+    CHECK_FALSE(p1 == p2);
+    p1.block = block1;
+    p1.port = 0;
+    p2.block = block2;
+    p2.port = 1;
+    CHECK_FALSE(p1 == p2);
+    p1.block = block1;
+    p1.port = 1;
+    p2.block = block2;
+    p2.port = 1;
+    CHECK_FALSE(p1 == p2);
+}
+
+TEST_CASE("Connect block with multiple ports", "[blocks]") {
+    auto blockSystem = std::make_shared<blocks::BlockSystem>();
+    auto block0 = std::make_shared<blocks::ProcessBlock>(
+        std::make_unique<blocks::Gain>(2.0));
+    auto block1 = std::make_shared<blocks::ProcessBlock>(
+        std::make_unique<blocks::Gain>(4.0));
+    auto splitter = std::make_shared<blocks::Splitter>(2);
+    blockSystem->addBlock(block0);
+    blockSystem->addBlock(block1);
+    blockSystem->addBlock(splitter);
+    blocks::Connection connection;
+    connection.source.block = splitter;
+    connection.source.port = 0;
+    connection.target.block = block0;
+    blockSystem->addConnection(connection);
+    connection.source.block = splitter;
+    connection.source.port = 1;
+    connection.target.block = block1;
+    blockSystem->addConnection(connection);
+}

@@ -2,6 +2,7 @@
 #define BLOCKS_BLOCK_H
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace blocks {
@@ -16,10 +17,15 @@ class Block {
     float getOutput(uint portIdx = 0) const;
     uint getInputSize() const;
     uint getOutputSize() const;
+    void setName(const std::string& name);
+    std::string_view getName() const;
 
   protected:
     PortValues_t inputs_;
     PortValues_t outputs_;
+
+  private:
+    std::string name_ = "";
 };
 
 class BlockAtomic : public Block {

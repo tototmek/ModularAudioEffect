@@ -2,6 +2,8 @@
 #include "evaluation_sequence.h"
 #include "exceptions.h"
 #include <algorithm>
+#include <spdlog/fmt/fmt.h>
+#include <spdlog/spdlog.h>
 
 namespace blocks {
 
@@ -12,6 +14,8 @@ void BlockSystem::evaluate() {
         updateEvaluationSequence();
         shouldUpdateEvalSequence_ = false;
     }
+    // spdlog::info("Evaluating blocks");
+    // spdlog::info("Sequence: {}", fmt::join(evalSequence_, ", "));
     // Set inputs
     for (uint i = 0; i < inputConnections_.size(); ++i) {
         auto port = inputConnections_[i];
@@ -20,6 +24,7 @@ void BlockSystem::evaluate() {
     // Evaluate blocks
     for (auto blockIdx : evalSequence_) {
         auto block = blocks_[blockIdx];
+        // spdlog::info("Evaluating: {}", block->getName());
         block->evaluate();
         for (const auto& connection : connections_[block]) {
             float value =

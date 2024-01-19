@@ -31,6 +31,9 @@ float Block::getOutput(uint portIdx) const {
 uint Block::getInputSize() const { return inputs_.size(); }
 uint Block::getOutputSize() const { return outputs_.size(); }
 
+void Block::setName(const std::string& name) { name_ = name; }
+std::string_view Block::getName() const { return name_; }
+
 BlockAtomic::BlockAtomic(uint nInputs, uint nOutputs)
     : Block(nInputs, nOutputs) {}
 
