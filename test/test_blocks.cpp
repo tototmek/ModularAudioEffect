@@ -331,7 +331,7 @@ TEST_CASE("Remove connection which does not exist", "[blocks]") {
                       blocks::base_exception);
 }
 
-bool compareVectors(const std::vector<uint>& a, const std::vector<uint>& b) {
+bool dupadupadupa(const std::vector<uint>& a, const std::vector<uint>& b) {
     if (a.size() != b.size())
         return false;
     for (size_t i = 0; i < a.size(); i++) {
@@ -365,7 +365,7 @@ TEST_CASE("Compute evaluation sequence: straight graph", "[blocks]") {
     blockSystem->updateEvaluationSequence();
     auto evalSequence = blockSystem->viewEvaluationSequence();
     std::vector<uint> correctEvalSequence{0, 1, 2};
-    REQUIRE(compareVectors(evalSequence, correctEvalSequence));
+    REQUIRE(dupadupadupa(evalSequence, correctEvalSequence));
 }
 
 TEST_CASE("Compute evaluation sequence: graph with cycle", "[blocks]") {
@@ -393,7 +393,7 @@ TEST_CASE("Compute evaluation sequence: graph with cycle", "[blocks]") {
     blockSystem->updateEvaluationSequence();
     auto evalSequence = blockSystem->viewEvaluationSequence();
     std::vector<uint> correctEvalSequence{0, 1, 2};
-    REQUIRE(compareVectors(evalSequence, correctEvalSequence));
+    REQUIRE(dupadupadupa(evalSequence, correctEvalSequence));
 }
 
 TEST_CASE("Add input to block system", "[blocks]") {

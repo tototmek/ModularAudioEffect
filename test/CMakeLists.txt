@@ -2,6 +2,7 @@ find_package(Catch2 REQUIRED)
 
 set(tests_SRC
 test_blocks.cpp
+test_graphs.cpp
 )
 
 add_executable(UnitTests ${tests_SRC})

@@ -1,5 +1,5 @@
 #include "evaluation_sequence.h"
-#include <chrono>
+#include <algorithm>
 #include <limits>
 #include <map>
 #include <set>
@@ -12,17 +12,6 @@
 namespace blocks {
 
 namespace {
-
-using graph_t = std::map<uint, std::vector<uint>>;
-
-// TODO: Extensive testing of these algorithms, optimization of topoligical sort
-
-void printGraph(const graph_t& graph) {
-    spdlog::info("Graph:");
-    for (auto const& node : graph) {
-        spdlog::info("{}:\t{}", node.first, fmt::join(node.second, ", "));
-    }
-}
 
 graph_t constructGraph(const Blocks_t blocks,
                        const Connections_t& connections) {
@@ -44,40 +33,38 @@ graph_t constructGraph(const Blocks_t blocks,
 }
 
 void dfs(uint u, const std::map<uint, std::vector<uint>>& graph,
-         std::set<uint>& visited, std::stack<uint>& st, std::set<uint>& onStack,
+         std::unordered_set<uint>& visited, std::stack<uint>& stack,
+         std::unordered_set<uint>& onStack,
          std::set<std::pair<uint, uint>>& feedbackEdges) {
     visited.insert(u);
-    st.push(u);
+    stack.push(u);
     onStack.insert(u);
-
     if (graph.find(u) != graph.end()) {
         for (uint v : graph.at(u)) {
             if (visited.find(v) == visited.end()) {
                 // Forward edge
-                dfs(v, graph, visited, st, onStack, feedbackEdges);
+                dfs(v, graph, visited, stack, onStack, feedbackEdges);
             } else if (onStack.find(v) != onStack.end()) {
                 // Back edge (forms a cycle)
                 feedbackEdges.insert({u, v});
             }
-            // Ignore cross edges as they don't form cycles in a directed graph
         }
     }
-
-    st.pop();
+    stack.pop();
     onStack.erase(u);
 }
 
 std::set<std::pair<uint, uint>>
 findFeedbackEdgeSet(const std::map<uint, std::vector<uint>>& graph) {
-    std::set<uint> visited;
-    std::set<uint> onStack;
-    std::stack<uint> st;
+    std::unordered_set<uint> visited;
+    std::unordered_set<uint> onStack;
+    std::stack<uint> stack;
     std::set<std::pair<uint, uint>> feedbackEdges;
 
     for (const auto& entry : graph) {
         uint u = entry.first;
         if (visited.find(u) == visited.end()) {
-            dfs(u, graph, visited, st, onStack, feedbackEdges);
+            dfs(u, graph, visited, stack, onStack, feedbackEdges);
         }
     }
 
@@ -125,51 +112,16 @@ std::vector<uint> topologicalSort(const graph_t& graph) {
 
 } // namespace
 
+std::vector<uint> computeEvaluationSequence(graph_t graph) {
+    removeCycles(graph);
+    std::vector<uint> orderedNodes = topologicalSort(graph);
+    return orderedNodes;
+}
+
 std::vector<uint> computeEvaluationSequence(const Blocks_t& blocks,
                                             const Connections_t& connections) {
-    spdlog::info("Computing operation evaluation order...");
-    auto start = std::chrono::high_resolution_clock::now();
-
-    spdlog::info("Parsing block structure...");
-    // Step 0: Construct graph representation
-    auto t1 = std::chrono::high_resolution_clock::now();
     graph_t graph = constructGraph(blocks, connections);
-    auto t2 = std::chrono::high_resolution_clock::now();
-
-    auto duration =
-        std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-    spdlog::info("Took {} microseconds", duration.count());
-
-    spdlog::info("Parsed graph:");
-    printGraph(graph);
-
-    spdlog::info("Cutting cyclic connections...");
-    // Step 1: Disconnect all cyclic dependenciens
-    t1 = std::chrono::high_resolution_clock::now();
-    removeCycles(graph);
-    t2 = std::chrono::high_resolution_clock::now();
-
-    duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-    spdlog::info("Took {} microseconds", duration.count());
-
-    spdlog::info("Cut graph:");
-    printGraph(graph);
-
-    spdlog::info("Computing operation order...");
-    // Step 2: Find topological ordering
-    t1 = std::chrono::high_resolution_clock::now();
-    auto orderedNodes = topologicalSort(graph);
-    t2 = std::chrono::high_resolution_clock::now();
-
-    duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-    spdlog::info("Took {} microseconds", duration.count());
-    auto end = std::chrono::high_resolution_clock::now();
-    auto deltatime =
-        std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    spdlog::info("\t -> Elapsed time: {} microseconds", deltatime.count());
-    spdlog::info("\t -> Order: {}", fmt::join(orderedNodes, ", "));
-
-    return orderedNodes;
+    return computeEvaluationSequence(graph);
 }
 
 } // namespace blocks
