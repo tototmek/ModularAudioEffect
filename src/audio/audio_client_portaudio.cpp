@@ -37,10 +37,10 @@ static int portAudioCallback(const void* inputBuffer, void* outputBuffer,
             out[outIndex++] = outputVector[k];
         }
     }
-    if (statusFlags & paOutputUnderflow) {
+    if (bool(statusFlags & paOutputUnderflow)) {
         spdlog::error("Output underflow detected. (xrun)");
     }
-    if (statusFlags & paInputOverflow) {
+    if (bool(statusFlags & paInputOverflow)) {
         spdlog::error("Input overflow detected. (xrun)");
     }
     return paContinue;
