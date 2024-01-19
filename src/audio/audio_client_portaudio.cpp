@@ -20,7 +20,6 @@ static int portAudioCallback(const void* inputBuffer, void* outputBuffer,
                              void* userData) {
     static std::vector<float> inputVector, outputVector;
     (void)timeInfo;
-    (void)statusFlags;
     const float* in = (const float*)inputBuffer;
     float* out = (float*)outputBuffer;
     PortAudioClient* client = reinterpret_cast<PortAudioClient*>(userData);
@@ -37,6 +36,12 @@ static int portAudioCallback(const void* inputBuffer, void* outputBuffer,
         for (k = 0; k < nOutputs; ++k) {
             out[outIndex++] = outputVector[k];
         }
+    }
+    if (statusFlags & paOutputUnderflow) {
+        spdlog::error("Output underflow detected. (xrun)");
+    }
+    if (statusFlags & paInputOverflow) {
+        spdlog::error("Input overflow detected. (xrun)");
     }
     return paContinue;
 }
